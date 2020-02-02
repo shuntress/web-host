@@ -24,7 +24,6 @@ const index = require(path.join(__dirname, 'index.js'));
 const auth = require(path.join(__dirname, 'auth.js'));
 const log = require(path.join(__dirname, 'log.js'));
 const dispatch = require(path.join(__dirname, 'dispatch.js'));
-const filter = require(path.join(__dirname, 'filter.js'));
 
 /**
  * HTTP configuration constants
