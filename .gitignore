@@ -1,0 +1,4 @@
+account_creation_requests.txt
+user_credentials.txt
+*.pem
+*.backup
