@@ -1,0 +1,245 @@
+<html>
+	<head>
+		<meta name="viewport"
+		content="width=device-width,
+		initial-scale=1.0" >
+
+		<style>
+			body {
+				margin: auto;
+				max-width: 80ch;
+				padding: 0 1ch;
+			}
+
+			h2 {
+				border-bottom: 1px solid grey;
+			}
+
+			kbd {
+				color: darkred;
+			}
+
+			pre {
+				overflow: scroll;
+			}
+
+			p {
+				font-family: "Times New Roman", Times, serif;
+
+			}
+			
+			ol.notes > li,
+			.note {
+				color: grey;
+				font-size: .9em;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>
+			Web Core
+		</h1>
+		<ul>
+			<li>
+Simple
+			</li>
+			<li>
+<a href="../web-core" title="Go To Code">Open</a>
+			</li>
+			<li>
+No dependencies (<a href="https://nodejs.org/en/">one dependency</a>)
+			</li>
+		</ul>
+
+		<h2>About</h2>
+		<p>
+			This project is my take on a minimalist
+			fully-featured web host: A few small modules
+			using only node's built-ins to serve static
+			content plus a basic dispatcher that routes
+			requests to controller modules for custom
+			request handling.
+		</p>
+
+		<h2>
+			Setup
+		</h2>
+		<p>
+			You may notice the node_modules folder is
+			missing and that there are no grunt, trevor, cargo,
+			slurp, package, jarvis, babel, lint, or
+			docker files. There are no subdirectories
+			(except git).
+
+			The most complex part of installing this
+			software is basic systemd configuration.
+		</p>
+
+	<p>
+	Pick a folder to contain your website.
+
+	Then, if you trust me, just super-user do
+	<a href="setup.sh">setup.sh</a> in that folder.
+
+	Blindly sudo-ing random scripts from the
+	internet is obviously not a best practice.
+	Please take a moment to read the 
+	<a href="setup.sh">setup script</a>
+	before you run it with elevated
+	permissions or follow along and type it out for
+	yourself.
+	</p>
+	<p class="note">
+	These setup instructions are for *nix systems (Raspbian). If you can
+	translate the setup to match your install environment,
+	all of the web-core javascript should be system-agnostic.
+	</p>
+	<ol>
+		<li><p>
+Install git and node
+		<pre><kbd>apt-get install git</kbd></pre>
+		<pre><kbd>apt-get install nodejs</kbd></pre>
+		</p></li>
+		<li><p>
+Clone web-core
+		<pre><kbd>git clone http://www.shuntress.net/public/projects/web-core/.git</kbd></pre>
+		</p></li>
+		<li><p>
+		Change to the web-core directory
+		<pre><kbd>cd web-core</kbd></pre>
+		</p></li>
+		<li><p>
+Generate the server key/certificate <span class="note">(This prompts for a few user inputs)</span>
+		<pre><kbd>openssl req -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 -out certificate.pem</kbd></pre>
+		</p></li>
+		
+		<li><p>
+Create the web root folders
+<pre><kbd>
+mkdir ../www-actions-public
+mkdir ../www-actions-private
+cp example_controller.js ../www-actions-private
+mkdir ../www-public
+echo "Test file. Please ignore." > ../www-public/ThisIsATest.txt
+mkdir ../www-private
+</kbd></pre>
+		</p></li>
+		<li><p>
+Give node permission to bind to ports
+		80 and 443 without running as root
+		<pre><kbd>sudo setcap CAP_NET_BIND_SERVICE=+ep $(type -p node)</kbd></pre>
+		</p></li>
+		<li><p>
+Configure node to run as a service
+<p class="note">
+(Skip this step and just run `node site.js` if you want.
+But skipping it will make longer-term site
+		management significantly more annoying)</p>
+<pre><kbd>
+nodepath=$(type -P node)
+installpath=$(pwd)
+unitFile = /etc/systemd/system/nodeserver.service
+touch $unitFile
+echo "[Unit]" >> $unitFile
+echo "Description=Node.js Server" >> $unitFile
+echo "" >> $unitFile
+echo "[Service]" >> $unitFile
+printf "ExecStart=%s %s/site.js" $nodepath $installpath >> $unitFile
+echo "Restart=always" >> $unitFile
+echo "# Restart service after 10 seconds if node service crashes" >> $unitFile
+echo " RestartSec=10" >> $unitFile
+echo " # Output to syslog" >> $unitFile
+echo "StandardOutput=syslog" >> $unitFile
+echo "StandardError=syslog" >> $unitFile
+echo "SyslogIdentifier=nodeserver" >> $unitFile
+echo "" >> $unitFile
+echo "[Install]" >> $unitFile
+echo "WantedBy=multi-user.target" >> $unitFile
+
+logConf = /etc/rsyslog.d/nodeserver.conf
+touch $logConf
+echo "if \$programname == 'nodeserver' then /var/log/nodeserver.log" > $longConf
+echo "if \$programname == 'nodeserver' then ~" >> $logConf
+</kbd></pre>
+		
+		</p></li>
+		<li><p>
+Configure your router to pass traffic
+		on ports 80 and 443 to the machine running
+		your web site.
+		<span class="note">
+		(Probably 192.168.1.1 with credentials
+	on a sticker. Look for firewall or port-forwarding rules.)<span>
+		</p></li>
+		<li><p>
+Place some files into either the www-public for http and www-private
+		for https folders. Everything in the www-private
+		folder will be protected by the
+		username:password configured in
+		`basic-auth-credentials.txt`.
+		</p></li>
+		<li>
+		Check if things are working with: <pre><kbd>systemctl status nodeserver</kbd></pre> 
+		<p class="note"> systemctl can show
+		service status if you did not skip
+		step 8. If you did skip step 8, then the terminal where you ran `node site.js` should display the log output.</p>
+		and navigate a browser to <pre><kbd>http://[yourip]/</kbd></pre> <pre><kbd>https://[yourip]/</kbd></pre>
+		</li>
+
+		<li><p>
+			Create and account
+		</p>
+		<p>
+			<pre><kbd>https://[yourip]/account</kbd></pre>
+			This form will add a username, password hash, and salt to <pre><kbd>account_creation_requests.txt</kbd></pre>
+		</p>
+		<p>
+			Move the line for the account(s) you wish to create from there to <pre><kbd>user_credentials.txt</kbd></pre> (create this file if it does not exist)
+		</p>
+		</li>
+	</ol>
+
+<h2>
+Server-Side Code for Dynamic Content
+</h2>
+<p>
+    Adding server-side code
+		is a little more complicated than static content. <a href="dispatch.js">dispatch.js</a> handles
+		scanning for controller modules when the server (re)starts. Currently in this context,
+		a 'controller module' is 'any file in www-actions-public or www-actions-private'.
+		Any `.js` file that sets a function on `module.exports` will be called when you go to
+		its URL.
+		
+		The setup script copies `example.js` to www-actions-private. which will be:
+		<pre><kbd>
+		https://[yourip]/example/index
+		</kbd></pre>
+</p>
+
+<h2 class="note">
+Additional Notes
+</h2>
+<ol class="notes">
+<li>
+<p>
+The basic auth credentials,
+certificate, and secret key are in web-core and
+noted in .gitignore to help prevent them being
+accidentally included in source control
+management history.</p>
+</li>
+
+<li>
+<p>
+The web root folders are outside the web-core
+repository because site content management is
+not handled by this project.</p>
+</li>
+
+<li>
+Logging is mostly handled by systemd and logs can be viewed either directly with <pre><kbd>tail /var/log/nodeserver.log</kbd></pre> or <pre><kbd>journalctl -u nodeserver</kbd></pre>
+</li>
+</ol>
+		</p>
+	</body>
+</html>
