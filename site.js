@@ -52,7 +52,7 @@ const serverCertificatePath = path.join(__dirname, 'certificate.pem');
  * username:password which is expected to be transfered as base64
  * encoded plaintext according to the RFC2617 specification.
  *
- * If they do not exist, try using the folling command to generate them
+ * If they do not exist, try using the following command to generate them:
  *
  * openssl req -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 -out certificate.pem
  */
@@ -76,10 +76,9 @@ const httpsServer = https.createServer(httpsOptions, function (req, res) {
   log(`(private) ${req.method} request for ${httpsPort} ${req.headers.host}${req.url} from ${req.connection.remoteAddress}`);
   req.url = path.normalize(req.url);
   /**
-   * basic_auth.js checks if the given string of users contains the
-   * user specified in the authentication header. It calls the
-   * handleHttpsRequest callback if the user:password combination is
-   * present and returns 401 otherwise.
+   * auth.js checks for valid credentials in the authentication header.
+   * It calls the handleHttpsRequest callback if a valid user:password
+   * combination is present and returns 401 otherwise.
    */
   auth.authorize(req, res, () => {
     if (!httpsDispatch(req, res)) {

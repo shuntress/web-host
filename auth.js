@@ -7,7 +7,7 @@
  *
  * This module also controls the "Request Account" page
  * ( https://[my.website]/account )
- * When a user visits that URL and requests and account,
+ * When a user visits that URL and requests an account,
  * this module puts their account information in to the
  * "account_creation_requests.txt" file in the web-core
  * directory which must then be copied to the

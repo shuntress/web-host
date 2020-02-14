@@ -10,7 +10,7 @@
  * 
  * Be default,
  * for http they will be: www-actions-public and www-public
- * for http they will be: www-actions-private and www-private
+ * for https they will be: www-actions-private and www-private
  */
 
 
