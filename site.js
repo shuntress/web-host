@@ -75,6 +75,15 @@ auth.init();
 const httpsServer = https.createServer(httpsOptions, function (req, res) {
   log(`(private) ${req.method} request for ${httpsPort} ${req.headers.host}${req.url} from ${req.connection.remoteAddress}`);
   req.url = path.normalize(req.url);
+
+	/**
+	 * Kludge fix serve my resume over https without authentication
+	 */
+	if (path.basename(req.url) === 'Samuel_Huntress.html' || path.basename(req.url) === 'Samuel_Huntress.pdf') {
+		index(httpsRoot, privateIndexFile, req, res);
+		return;
+	}
+
   /**
    * auth.js checks for valid credentials in the authentication header.
    * It calls the handleHttpsRequest callback if a valid user:password
@@ -95,6 +104,22 @@ httpsServer.listen(httpsPort);
 const httpServer = http.createServer(function (req, res) {
   log(`(public) request for ${httpPort} ${req.headers.host}${req.url} from ${req.connection.remoteAddress}`);
   req.url = path.normalize(req.url);
+
+	/**
+	 * Kludge fix to make resume look more professional by
+	 * serving over https without affecting people to whom
+	 * I have already given the HTTP URL
+	 */
+	if (path.basename(req.url) === 'Samuel_Huntress.html') {
+		res.writeHead(302, {Location: 'https://www.shuntress.net/Samuel_Huntress.html'});
+		res.end();
+		return;
+	}
+	if (path.basename(req.url) === 'Samuel_Huntress.pdf') {
+		res.writeHead(302, {Location: 'https://www.shuntress.net/Samuel_Huntress.pdf'});
+		res.end();
+		return;
+	}
 
   if(!httpDispatch(req, res)) {
     index(httpRoot, pickIndexFile(req.headers.host, false), req, res);
