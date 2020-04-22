@@ -34,6 +34,13 @@ module.exports = function(root, index, req, res) {
           return res.end("404 Not Found");
         }
         const mimeType = mimeMap[path.extname(relative_pathname)];
+console.log(url.parse(req.url, true).query);
+				// Check to render markdown
+				if (mimeType == 'text/markdown' && Object.prototype.hasOwnProperty.call(url.parse(req.url, true).query, 'render_markdown')) {
+					res.writeHead(200, {"Content-Type": "text/html"});
+					res.write(renderMarkdown(data.toString()));
+					return res.end();
+				}
 
 				// "resume Download" partial file
 				if ((mimeType == 'audio/mpeg' || mimeType == 'audio/flac') && req.headers.range && req.headers.range.includes('=') && req.headers.range.includes('-')){
@@ -74,7 +81,7 @@ module.exports = function(root, index, req, res) {
   <body>
     <ul>
     ${parent_dir ? `<li><a href="${parent_dir}">..</a></li>`:''}
-    ${files.map(file =>`<li><a href="${path.join(decoded_pathname, encodeURIComponent(file))}">${file}</a></li>`).join(`
+    ${files.map(file =>`<li><a href="${path.join(decoded_pathname, encodeURIComponent(file))}">${file}</a>${path.extname(file) === '.md' ? ` <a href="${path.join(decoded_pathname, encodeURIComponent(file))}?render_markdown">(html)</a>` : ''}</li>`).join(`
     `)}
     </ul>
   </body>
@@ -112,6 +119,33 @@ function checkAuthorization (req, res, checkPath, callback) {
 }
 
 /**
+ * WIP
+ * Add basic markdown rendering.
+ */
+function renderMarkdown(data) {
+	let stack = {};
+	let first = 0;
+	let last = 0;
+	while ((first = data.indexOf('_')) != (last = data.lastIndexOf('_'))) {
+		data = `${data.substring(0, first)}<em>${data.substring(first+1, last)}</em>${data.substring(last+1)}}`;
+	}
+
+	return `<html><meta charset="UTF-8"><body>${data.split('\n').map(line => {
+		let trimmed = line.trim();
+
+		line = line.replace(/[\n#]/g, '');
+		if (trimmed.startsWith('#')) return `<h1>${line}</h1>`;
+		if (trimmed.startsWith('##')) return `<h2>${line}</h2>`;
+		if (trimmed.startsWith('###')) return `<h3>${line}</h3>`;
+		if (trimmed.startsWith('####')) return `<h4>${line}</h4>`;
+		if (trimmed.startsWith('#####')) return `<h5>${line}</h5>`;
+		if (trimmed.startsWith('######')) return `<h6>${line}</h6>`;
+
+		return `<p>${line}</p>`;
+	}).join('\n')}</body></html>`;
+}
+
+/**
  * This is fine.
  *
  * It would definitely be practical to just
@@ -130,7 +164,9 @@ const mimeMap = {
 	".gif": "image/gif",
 	".png": "image/png",
 	".css": "text/css",
-	".svg": "image/svg+xml"
+	".svg": "image/svg+xml",
+	".md": "text/markdown",
+	".markdown": "text/markdown"
 };
 
 /**
