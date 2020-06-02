@@ -55,7 +55,7 @@ console.log(url.parse(req.url, true).query);
 					}
 
 					res.writeHead(206, mimeType ? {"Content-Type": mimeType, 'Accept-Ranges': 'bytes', 'Content-Range': `bytes ${rangeStart}-${rangeEnd}/${stats.size}`, 'Content-Length': Number(rangeEnd) - Number(rangeStart) +1} : null);
-					res.write(data.slice(Number(rangeStart), (Number(rangeEnd) - Number(rangeStart)) + 1));
+					res.write(data.slice(Number(rangeStart), Number(rangeEnd) + 1));
 					return res.end();
 				} else {
 	        res.writeHead(200, mimeType ? {"Content-Type": mimeType} : null);
