@@ -10,6 +10,8 @@ const fs = require('fs');
 const url = require('url');
 const path = require('path');
 
+const log = require(path.join(__dirname, 'log.js'));
+
 module.exports = function(root, index, req, res) {
   const decoded_pathname = path.normalize(decodeURIComponent(url.parse(req.url).pathname));
   const relative_pathname = path.join(root, decoded_pathname);
@@ -34,13 +36,7 @@ module.exports = function(root, index, req, res) {
           return res.end("404 Not Found");
         }
         const mimeType = mimeMap[path.extname(relative_pathname)];
-console.log(url.parse(req.url, true).query);
-				// Check to render markdown
-				if (mimeType == 'text/markdown' && Object.prototype.hasOwnProperty.call(url.parse(req.url, true).query, 'render_markdown')) {
-					res.writeHead(200, {"Content-Type": "text/html"});
-					res.write(renderMarkdown(data.toString()));
-					return res.end();
-				}
+        const filename = path.basename(relative_pathname);
 
 				// "resume Download" partial file
 				if ((mimeType == 'audio/mpeg' || mimeType == 'audio/flac') && req.headers.range && req.headers.range.includes('=') && req.headers.range.includes('-')){
@@ -70,6 +66,7 @@ console.log(url.parse(req.url, true).query);
           res.writeHead(200);
           res.write(
 `<html>
+<meta charset="UTF-8">
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
@@ -82,8 +79,7 @@ console.log(url.parse(req.url, true).query);
   <body>
     <ul>
     ${parent_dir ? `<li><a href="${parent_dir}">..</a></li>`:''}
-    ${files.map(file =>`<li><a href="${path.join(decoded_pathname, encodeURIComponent(file))}">${file}</a>${path.extname(file) === '.md' ? ` <a href="${path.join(decoded_pathname, encodeURIComponent(file))}?render_markdown">(html)</a>` : ''}</li>`).join(`
-    `)}
+    ${files.map(file =>`<li><a href="${path.join(decoded_pathname, encodeURIComponent(file))}">${file}</a>`).join('\n\t')}
     </ul>
   </body>
 </html>`);
@@ -105,7 +101,7 @@ function checkAuthorization (req, res, checkPath, callback) {
         callback();
         return;
       }
-      console.log(err);
+      log(`Authorization Failure: ${err}`);
     }
 
     const name = getUserName(req);
@@ -114,43 +110,16 @@ function checkAuthorization (req, res, checkPath, callback) {
     } else {
       res.writeHead(403, {"Content-Type": "text/plain"});
 			res.end("Access Forbidden");
-      console.log(`unauthorized access attempt by ${name} to ${checkPath}`);
+      log(`unauthorized access attempt by ${name} to ${checkPath}`);
     }
   });
-}
-
-/**
- * WIP
- * Add basic markdown rendering.
- */
-function renderMarkdown(data) {
-	let stack = {};
-	let first = 0;
-	let last = 0;
-	while ((first = data.indexOf('_')) != (last = data.lastIndexOf('_'))) {
-		data = `${data.substring(0, first)}<em>${data.substring(first+1, last)}</em>${data.substring(last+1)}}`;
-	}
-
-	return `<html><meta charset="UTF-8"><body>${data.split('\n').map(line => {
-		let trimmed = line.trim();
-
-		line = line.replace(/[\n#]/g, '');
-		if (trimmed.startsWith('#')) return `<h1>${line}</h1>`;
-		if (trimmed.startsWith('##')) return `<h2>${line}</h2>`;
-		if (trimmed.startsWith('###')) return `<h3>${line}</h3>`;
-		if (trimmed.startsWith('####')) return `<h4>${line}</h4>`;
-		if (trimmed.startsWith('#####')) return `<h5>${line}</h5>`;
-		if (trimmed.startsWith('######')) return `<h6>${line}</h6>`;
-
-		return `<p>${line}</p>`;
-	}).join('\n')}</body></html>`;
 }
 
 /**
  * This is fine.
  *
  * It would definitely be practical to just
- * include a module from npmjs that has all
+ * include a module from npm that has all
  * MIME types but I am going to stick to
  * my _no_ dependencies premise.
  */
