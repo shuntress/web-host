@@ -50,7 +50,7 @@ module.exports = function(root, index, req, res) {
 						return res.end('Range Not Satisfiable');
 					}
 
-					res.writeHead(206, mimeType ? {"Content-Type": mimeType, 'Accept-Ranges': 'bytes', 'Content-Range': `bytes ${rangeStart}-${rangeEnd}/${stats.size}`, 'Content-Length': Number(rangeEnd) - Number(rangeStart) +1} : null);
+					res.writeHead(206, mimeType ? {"Content-Type": mimeType, 'Accept-Ranges': 'bytes', 'Content-Range': `bytes ${rangeStart}-${rangeEnd}/${stats.size}`, 'Content-Length': (Number(rangeEnd) + 1) - Number(rangeStart)} : null);
 					res.write(data.slice(Number(rangeStart), Number(rangeEnd) + 1));
 					return res.end();
 				} else {
