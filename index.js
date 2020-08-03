@@ -50,6 +50,12 @@ module.exports = function(root, index, req, res) {
 						return res.end('Range Not Satisfiable');
 					}
 
+					if ((data.length - Number(rangeStart)) < ((Number(rangeEnd) + 1) - Number(rangeStart))) {
+						/**
+						 *  TODO: Diagnose ERR_CONTENT_LENGTH_MISMATCH that seems to be coming from cases
+						 * where content length is set incorrectly when the "end" chunk of a file is requested.
+						 */
+					}
 					res.writeHead(206, mimeType ? {"Content-Type": mimeType, 'Accept-Ranges': 'bytes', 'Content-Range': `bytes ${rangeStart}-${rangeEnd}/${stats.size}`, 'Content-Length': (Number(rangeEnd) + 1) - Number(rangeStart)} : null);
 					res.write(data.slice(Number(rangeStart), Number(rangeEnd) + 1));
 					return res.end();
@@ -63,7 +69,7 @@ module.exports = function(root, index, req, res) {
       checkAuthorization(req, res, relative_pathname, () => {
         fs.readdir(relative_pathname, (err, files) => {
           const parent_dir = path.dirname(decoded_pathname);
-          res.writeHead(200);
+          res.writeHead(200, {"Content-Type": "text/html"});
           res.write(
 `<html>
 <meta charset="UTF-8">
