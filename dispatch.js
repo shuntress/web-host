@@ -40,10 +40,9 @@ module.exports.getDispatcher = (controllerRoot, wwwRoot, server) => {
 		if (parts.length > 1) {
 			const controller = parts.pop();
 			const controllerPath = path.join(...parts);
-			
+
 			const find = path.join(controllerRoot, controllerPath, controller + '.js');
-	
-			console.log(`Looking for: ${find} in:`, Object.keys(controllers));
+
 			let match = controllers[find];
 
 			if (match) {

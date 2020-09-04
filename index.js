@@ -85,7 +85,7 @@ module.exports = function(root, index, req, res) {
   <body>
     <ul>
     ${parent_dir ? `<li><a href="${parent_dir}">..</a></li>`:''}
-    ${files.map(file =>`<li><a href="${path.join(decoded_pathname, encodeURIComponent(file))}">${file}</a>`).join('\n\t')}
+    ${files.map(file =>`<li><a href="${path.join(decoded_pathname, encodeURIComponent(file))}">${file}</a></li>`).join('\n\t')}
     </ul>
   </body>
 </html>`);

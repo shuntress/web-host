@@ -37,7 +37,7 @@ const httpControllerDir = path.join(__dirname, '..', 'www-actions-public');
  * HTTPS configuration constants
  */
 const httpsPort = 443;
-const privateIndexFile = null;
+const privateIndexFile = 'index.html';
 const httpsRoot = path.join(__dirname, '..', 'www-private');
 const httpsControllerDir = path.join(__dirname, '..', 'www-actions-private');
 const serverPrivateKeyPath = path.join(__dirname, 'key.pem');
@@ -152,6 +152,9 @@ const pickIndexFile = (domain, isPrivate) => {
 	} else {
 		if (domain && domain.includes('www.1-800-frogs.com')) {
 			return 'frogs.html';
+		}
+		if (domain && domain.includes('www.teabagmedaddy.com')) {
+			return 'mv.html';
 		}
 
 		return publicIndexFile;
