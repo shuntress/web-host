@@ -30,41 +30,51 @@ module.exports = function(root, index, req, res) {
     }
     
     if (stats.isFile()) {
-      checkAuthorization(req, res, path.dirname(relative_pathname), () => fs.readFile(relative_pathname, function(err, data) {
-        if (err) {
-          res.writeHead(404);
-          return res.end("404 Not Found");
-        }
-        const mimeType = mimeMap[path.extname(relative_pathname)];
-        const filename = path.basename(relative_pathname);
+      checkAuthorization(req, res, path.dirname(relative_pathname), () => {
+				// Pre-Load checks
+				const mimeType = mimeMap[path.extname(relative_pathname)];
+				const filename = path.basename(relative_pathname);
 
 				// "resume Download" partial file
-				if ((mimeType == 'audio/mpeg' || mimeType == 'audio/flac') && req.headers.range && req.headers.range.includes('=') && req.headers.range.includes('-')){
+				let isPartialRequest = (mimeType == 'audio/mpeg' || mimeType == 'audio/flac') && req.headers.range && req.headers.range.includes('=') && req.headers.range.includes('-');
+				let rangeStart=0;
+				let rangeEnd = stats.size - 1;
+				if (isPartialRequest) {
 					let rangeString = req.headers.range.split('=')[1].split('-');
-					let rangeStart = rangeString[0];
-					let rangeEnd = rangeString[1];
+					rangeStart = rangeString[0];
+					rangeEnd = rangeString[1];
 					if (rangeEnd == 'null' || rangeEnd == '') rangeEnd = stats.size-1;
 
-					if (isNaN(rangeStart) || (Number(rangeStart) > data.length-1) || (rangeEnd != 'null' && isNaN(rangeEnd)) || (rangeEnd != 'null' && (Number(rangeEnd) > stats.size-1))) {
+					if (isNaN(rangeStart) || (Number(rangeStart) > stats.size-1) || (rangeEnd != 'null' && isNaN(rangeEnd)) || (rangeEnd != 'null' && (Number(rangeEnd) > stats.size-1))) {
 						res.writeHead(416);
 						return res.end('Range Not Satisfiable');
 					}
 
-					if ((data.length - Number(rangeStart)) < ((Number(rangeEnd) + 1) - Number(rangeStart))) {
+					if ((stats.size - Number(rangeStart)) < ((Number(rangeEnd) + 1) - Number(rangeStart))) {
 						/**
 						 *  TODO: Diagnose ERR_CONTENT_LENGTH_MISMATCH that seems to be coming from cases
 						 * where content length is set incorrectly when the "end" chunk of a file is requested.
 						 */
 					}
-					res.writeHead(206, mimeType ? {"Content-Type": mimeType, 'Accept-Ranges': 'bytes', 'Content-Range': `bytes ${rangeStart}-${rangeEnd}/${stats.size}`, 'Content-Length': (Number(rangeEnd) + 1) - Number(rangeStart)} : null);
-					res.write(data.slice(Number(rangeStart), Number(rangeEnd) + 1));
-					return res.end();
-				} else {
-	        res.writeHead(200, mimeType ? {"Content-Type": mimeType} : null);
 				}
-        res.write(data);
-        return res.end();
-      }));
+
+				// Load
+				dataStream = fs.createReadStream(relative_pathname, {start: Number(rangeStart), end: Number(rangeEnd)});
+				dataStream.on('error', function(){
+					res.writeHead(404);
+					return res.end("404 Not Found");
+				});
+				let responseHeader = {
+					"Content-Type": mimeType
+				};
+				if (isPartialRequest) {
+					responseHeader["Accept-Ranges"] = "bytes";
+					responseHeader["Content-Range"] = `bytes ${rangeStart}-${rangeEnd}/${stats.size}`;
+					responseHeader["Content-Length"] = (Number(rangeEnd) + 1) - Number(rangeStart);
+				}
+				res.writeHead(isPartialRequest ? 206 : 200, mimeType ? responseHeader : null);
+				dataStream.pipe(res);
+			});
     } else if (stats.isDirectory()) {
       checkAuthorization(req, res, relative_pathname, () => {
         fs.readdir(relative_pathname, (err, files) => {
