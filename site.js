@@ -28,12 +28,12 @@ const dispatch = require(path.join(__dirname, 'dispatch.js'));
 /**
  * HTTP configuration
  */
-const httpPort = 2080;
+const httpPort = 80;
 
 /**
  * HTTPS configuration
  */
-const privateIndexFile = 'index.html';
+const indexFile = 'index.html';
 const httpsPort = 443;
 const httpsRoot = path.join(__dirname, 'www');
 const httpsControllerDir = path.join(__dirname, 'controllers');
@@ -70,16 +70,8 @@ auth.init();
  * This is the secure entrypoint
  */
 const httpsServer = https.createServer(httpsOptions, function (req, res) {
-  log(`(private) ${req.method} request for ${httpsPort} ${req.headers.host}${req.url} from ${req.connection.remoteAddress}`);
+  log(`(https 443 secure) ${req.method} request for ${httpsPort} ${req.headers.host}${req.url} from ${req.connection.remoteAddress}`);
   req.url = path.normalize(req.url);
-
-	/**
-	 * Kludge fix serve my resume over https without authentication
-	 */
-	if (path.basename(req.url) === 'Samuel_Huntress.html' || path.basename(req.url) === 'Samuel_Huntress.pdf') {
-		index(httpsRoot, privateIndexFile, req, res);
-		return;
-	}
 
   /**
    * auth.js checks for valid credentials in the authentication header.
@@ -88,7 +80,7 @@ const httpsServer = https.createServer(httpsOptions, function (req, res) {
    */
   auth.authorize(req, res, () => {
     if (!httpsDispatch(req, res)) {
-      index(httpsRoot, privateIndexFile,  req, res);
+      index(httpsRoot, pickIndexFile(req.headers.host),  req, res);
     }
   });
 });
@@ -103,6 +95,7 @@ const httpServer = http.createServer(function (req, res) {
   let redirectLocation = "https://" + req.headers.host + req.url;
   log(`(http ${httpPort}) redirecting ${req.headers.host}${req.url} to ${redirectLocation}`);
   res.writeHead(302, {'Location': redirectLocation});
+	res.end();
 });
 httpServer.listen(httpPort);
 
@@ -125,16 +118,12 @@ const pickIndexFile = (domain, isPrivate) => {
    * from automatic tools. Add something here to handle that.
    */
 
-	if (isPrivate) {
-		return privateIndexFile;
-	} else {
-		if (domain && domain.includes('www.1-800-frogs.com')) {
-			return 'frogs.html';
-		}
-		if (domain && domain.includes('www.teabagmedaddy.com')) {
-			return 'mv.html';
-		}
-
-		return publicIndexFile;
+	if (domain && domain.includes('www.1-800-frogs.com')) {
+		return 'frogs.html';
 	}
+	if (domain && domain.includes('www.teabagmedaddy.com')) {
+		return 'mv.html';
+	}
+
+	return indexFile;
 };
