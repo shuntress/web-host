@@ -1,0 +1,7 @@
+Todo:
+Flesh out authorization check
+
+Add Override configs
+
+Add index "fall back" media-server
+	- Load from another server on 404

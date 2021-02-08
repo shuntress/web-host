@@ -33,6 +33,26 @@ const log = require(path.join(__dirname, 'log.js'));
 module.exports.getDispatcher = (controllerRoot, wwwRoot, server) => {
 	const controllers = {};
 	scan(controllerRoot, controllers, wwwRoot, server);
+
+	// Setup websocket handler
+	server.on('upgrade', function upgrade(req, socket, head) {
+		const parts = url.parse(req.url).pathname.split(path.sep);
+		if (parts.length > 1) {
+			const controller = parts.pop();
+			const controllerPath = path.join(...parts);
+
+			const find = path.join(controllerRoot, controllerPath, controller + '.js');
+
+			let match = controllers[find];
+
+			if (match) {
+				match.webSocket.handleUpgrade(req, socket, head, function done(ws) {
+					match.webSocket.emit('connection', ws, req);
+				});
+			}
+		}
+	});
+
 	return (req, res) => {
 		return dispatch(req, res, controllers, controllerRoot);
 	};
@@ -78,10 +98,10 @@ const dispatch = (req, res, controllers, controllerRoot) => {
 		// check for controller in controller collection
 		if(action && controller && controllerPath) {
 			if(controllers[find]) {
-				if(controllers[find][action]) {
+				if(controllers[find].controller[action]) {
 					const query = Array.from(parsedUrl.searchParams.keys()).reduce((a, k) => {return Object.assign({[k]: parsedUrl.searchParams.get(k)}, a);}, {});
 					log(`dispatching request for ${action} on ${controller} in ${controllerPath} with ${JSON.stringify(query)}`);
-					controllers[find][action](req, res, query);
+					controllers[find].controller[action](req, res, query);
 					match=true;
 				}
 			}
@@ -108,6 +128,9 @@ const scan = (dir, controllers, wwwRoot, server) => {
 	// load dir 
 	const nodes = fs.readdirSync(dir);
 
+	// Collect websockets from controllers
+	const webSockets = {};
+
 	// Check each file, if its a directory appaend to dir and pass to scan
 	nodes.forEach(node => {
 		const controllerPath = path.join(dir, node);
@@ -116,10 +139,13 @@ const scan = (dir, controllers, wwwRoot, server) => {
 			log(`found controller ${controllerPath}`);
 			// If its a file append to controllers
 			let controller = require(controllerPath);
+			controllers[controllerPath] = {controller};
 			if (controller.init) {
-				controller.init(wwwRoot, server);
+				let config = controller.init(wwwRoot, server);
+				if(config && config.webSocket) {
+					controllers[controllerPath].webSocket = config.webSocket;
+				}
 			}
-				controllers[controllerPath] = controller;
 		} else if (
 			stats.isDirectory()
 			&& !controllerPath.includes('node_modules')

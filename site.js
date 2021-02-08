@@ -33,8 +33,8 @@ const httpPort = 2080;
 /**
  * HTTPS configuration
  */
-const httpsPort = 20443;
-const privateIndexFile = null;
+const privateIndexFile = 'index.html';
+const httpsPort = 443;
 const httpsRoot = path.join(__dirname, 'www');
 const httpsControllerDir = path.join(__dirname, 'controllers');
 const serverPrivateKeyPath = path.join(__dirname, 'key.pem');
@@ -72,6 +72,15 @@ auth.init();
 const httpsServer = https.createServer(httpsOptions, function (req, res) {
   log(`(private) ${req.method} request for ${httpsPort} ${req.headers.host}${req.url} from ${req.connection.remoteAddress}`);
   req.url = path.normalize(req.url);
+
+	/**
+	 * Kludge fix serve my resume over https without authentication
+	 */
+	if (path.basename(req.url) === 'Samuel_Huntress.html' || path.basename(req.url) === 'Samuel_Huntress.pdf') {
+		index(httpsRoot, privateIndexFile, req, res);
+		return;
+	}
+
   /**
    * auth.js checks for valid credentials in the authentication header.
    * It calls the handleHttpsRequest callback if a valid user:password
@@ -94,7 +103,6 @@ const httpServer = http.createServer(function (req, res) {
   let redirectLocation = "https://" + req.headers.host + req.url;
   log(`(http ${httpPort}) redirecting ${req.headers.host}${req.url} to ${redirectLocation}`);
   res.writeHead(302, {'Location': redirectLocation});
-  res.end();
 });
 httpServer.listen(httpPort);
 
@@ -122,6 +130,9 @@ const pickIndexFile = (domain, isPrivate) => {
 	} else {
 		if (domain && domain.includes('www.1-800-frogs.com')) {
 			return 'frogs.html';
+		}
+		if (domain && domain.includes('www.teabagmedaddy.com')) {
+			return 'mv.html';
 		}
 
 		return publicIndexFile;
