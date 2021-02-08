@@ -1,0 +1,8 @@
+# Ignore everything in this directory.
+# Add site content here without affecting version control.
+*
+
+# Do not ignore .gitignore or example controller
+!.gitignore
+example.js
+

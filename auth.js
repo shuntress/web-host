@@ -52,6 +52,13 @@ module.exports.authorize = function authorize(req, res, callback) {
 		return true;
 	}
 
+	// check whether this url should be protected
+	if(req.url && !req.url.includes("private")) {
+		// If this is not private, let it through.
+		callback();
+		return true;
+	}
+
 	const auth = req.headers.authorization;
 	const parts = auth && auth.split(' ');
 	const credentials = parts && parts.length > 1 && Buffer.from(parts[1], 'base64').toString('ascii').split(':');

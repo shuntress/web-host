@@ -2,7 +2,7 @@
  * This is the 'main' module.
  * 
  * The goal is to provide simple access to everything
- * the homegamer might need out of their website.
+ * you might need out of your website.
  *
  * All the defaults should be good but you can change
  * them if you want.
@@ -26,20 +26,17 @@ const log = require(path.join(__dirname, 'log.js'));
 const dispatch = require(path.join(__dirname, 'dispatch.js'));
 
 /**
- * HTTP configuration constants
+ * HTTP configuration
  */
-const httpPort = 80;
-const publicIndexFile = 'about.html';
-const httpRoot = path.join(__dirname, '..', 'www-public');
-const httpControllerDir = path.join(__dirname, '..', 'www-actions-public');
+const httpPort = 2080;
 
 /**
- * HTTPS configuration constants
+ * HTTPS configuration
  */
-const httpsPort = 443;
+const httpsPort = 20443;
 const privateIndexFile = null;
-const httpsRoot = path.join(__dirname, '..', 'www-private');
-const httpsControllerDir = path.join(__dirname, '..', 'www-actions-private');
+const httpsRoot = path.join(__dirname, 'www');
+const httpsControllerDir = path.join(__dirname, 'controllers');
 const serverPrivateKeyPath = path.join(__dirname, 'key.pem');
 const serverCertificatePath = path.join(__dirname, 'certificate.pem');
 
@@ -90,17 +87,15 @@ const httpsDispatch = dispatch.getDispatcher(httpsControllerDir, httpsRoot, http
 httpsServer.listen(httpsPort);
 
 /**
- * this is the public entrypoint
+ * Non-secure http endpoint.
+ * This just redirects to the secure endpoint.
  */
 const httpServer = http.createServer(function (req, res) {
-  log(`(public) request for ${httpPort} ${req.headers.host}${req.url} from ${req.connection.remoteAddress}`);
-  req.url = path.normalize(req.url);
-
-  if(!httpDispatch(req, res)) {
-    index(httpRoot, pickIndexFile(req.headers.host, false), req, res);
-  }
+  let redirectLocation = "https://" + req.headers.host + req.url;
+  log(`(http ${httpPort}) redirecting ${req.headers.host}${req.url} to ${redirectLocation}`);
+  res.writeHead(302, {'Location': redirectLocation});
+  res.end();
 });
-const httpDispatch = dispatch.getDispatcher(httpControllerDir, httpRoot, httpServer);
 httpServer.listen(httpPort);
 
 /**

@@ -112,7 +112,7 @@ const scan = (dir, controllers, wwwRoot, server) => {
 	nodes.forEach(node => {
 		const controllerPath = path.join(dir, node);
 		const stats = fs.lstatSync(controllerPath);
-		if (stats.isFile()) {
+		if (stats.isFile() && path.extname(controllerPath) == ".js") {
 			log(`found controller ${controllerPath}`);
 			// If its a file append to controllers
 			let controller = require(controllerPath);
