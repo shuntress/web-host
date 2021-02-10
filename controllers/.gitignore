@@ -4,5 +4,5 @@
 
 # Do not ignore .gitignore or example controller
 !.gitignore
-example.js
+!web-core-example.js
 

@@ -1,7 +1,9 @@
 # Ignore everything in this directory.
-# Add site content here without affecting version control.
+# Add your content in the same folder as this file.
+# The wildcard star here will prevent your content affecting version control.
 *
 
-# Do not ignore .gitignore
+# Do not ignore .gitignore or example static content
 !.gitignore
+!web-core-about.html
 
