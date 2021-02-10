@@ -70,7 +70,7 @@ auth.init();
  * This is the secure entrypoint
  */
 const httpsServer = https.createServer(httpsOptions, function (req, res) {
-  log(`(https 443 secure) ${req.method} request for ${httpsPort} ${req.headers.host}${req.url} from ${req.connection.remoteAddress}`);
+  log(`(https ${httpsPort} secure) ${req.method} request for ${httpsPort} ${req.headers.host}${req.url} from ${req.connection.remoteAddress}`);
   req.url = path.normalize(req.url);
 
   /**
@@ -93,7 +93,7 @@ httpsServer.listen(httpsPort);
  */
 const httpServer = http.createServer(function (req, res) {
   let redirectLocation = "https://" + req.headers.host + req.url;
-  log(`(http ${httpPort}) redirecting ${req.headers.host}${req.url} to ${redirectLocation}`);
+  log(`(http ${httpPort}) ${req.method} request for ${httpPort} ${req.headers.host}${req.url} from ${req.connection.remoteAddress} redirecting to ${redirectLocation}`);
   res.writeHead(302, {'Location': redirectLocation});
 	res.end();
 });
