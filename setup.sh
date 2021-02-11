@@ -86,3 +86,4 @@ systemctl start nodeserver
 
 echo "Done."
 echo "Try http://localhost/web-core-about.html"
+echo "Request and account with https://localhost/account"

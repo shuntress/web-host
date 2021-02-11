@@ -35,7 +35,7 @@ module.exports = function(root, index, req, res) {
 				const mimeType = mimeMap[path.extname(relative_pathname)];
 				const filename = path.basename(relative_pathname);
 
-				// "resume Download" partial file
+				// "Resume Download" partial file
 				let isPartialRequest = (mimeType == 'audio/mpeg' || mimeType == 'audio/flac') && req.headers.range && req.headers.range.includes('=') && req.headers.range.includes('-');
 				let rangeStart=0;
 				let rangeEnd = stats.size - 1;

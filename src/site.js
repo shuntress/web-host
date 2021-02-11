@@ -51,7 +51,7 @@ const serverCertificatePath = path.join(__dirname, '..', 'administration', 'cert
  *
  * If they do not exist, try using the following command to generate them:
  *
- * openssl req -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 -out certificate.pem
+ * openssl req -newkey rsa:2048 -nodes -keyout administration/key.pem -x509 -days 365 -out administration/certificate.pem
  */
 const httpsOptions = {
 	key: fs.readFileSync(serverPrivateKeyPath),

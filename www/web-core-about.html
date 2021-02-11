@@ -54,12 +54,15 @@
 
 	<h2>About</h2>
 	<p>
-		This project is my take on a minimalist
-		fully-featured web host: A few small modules
-		using only node's built-ins to serve static
-		content plus a basic dispatcher that routes
-		requests to controller modules for custom
-		request handling.
+This is my take on a minimalist web host with code that
+can be fully reviewed in an hour and installed/run from
+source directly.
+
+This small web host uses only node's built-ins to handle:
+ - static content (filesystem index)
+ - dynamic content (server-side javascript)
+ - secure authentication ([HTTP authentication](https://tools.ietf.org/html/rfc7617), TLS/SSL, pbkdf2)
+ - simple authorization (optional per-directory user list)
 	</p>
 
 	<h2>

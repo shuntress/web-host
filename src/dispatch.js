@@ -5,12 +5,7 @@
  * checks a given URL to see if a controller action exists to
  * handle that URL.
  * 
- * controllerRoot and wwwRoot exist to prevent exposing controller
- * code directly as a static file.
- * 
- * Be default,
- * for http they will be: www-actions-public and www-public
- * for https they will be: www-actions-private and www-private
+ * By default, these modules are found in the "controllers" directory.
  */
 
 
@@ -26,8 +21,8 @@ const log = require(path.join(__dirname, 'log.js'));
  * Each exported action will be a property
  * 
  * Return dispatcher function.
- * @param {string} controllerRoot www-actions-public or www-actions-private)
- * @param {string} wwwRoot        The corresponding path to static data (in www-public|private)
+ * @param {string} controllerRoot Path to server-side code (web-core/controllers by default)
+ * @param {string} wwwRoot        Path to static data (web-core/www by default)
  * @param {object} server         The node http(s) server endpoint intended to be wrapped in a WebSocket endpoint
  */
 module.exports.getDispatcher = (controllerRoot, wwwRoot, server) => {
