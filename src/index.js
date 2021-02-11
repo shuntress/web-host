@@ -13,24 +13,24 @@ const path = require('path');
 const log = require(path.join(__dirname, 'log.js'));
 
 module.exports = function(root, index, req, res) {
-  const decoded_pathname = path.normalize(decodeURIComponent(url.parse(req.url).pathname));
-  const relative_pathname = path.join(root, decoded_pathname);
-  
-  if (index && decoded_pathname === '/') {
-     fs.readFile(path.join(root,index), 'ascii', (err, data) => {
-          res.write(data);
-          return res.end();
-     });
-  } else {
- 
-  fs.lstat(relative_pathname, function(err, stats) {
-    if (err) {
-      res.writeHead(404);
-      return res.end("404 Not Found");
-    }
-    
-    if (stats.isFile()) {
-      checkAuthorization(req, res, path.dirname(relative_pathname), () => {
+	const decoded_pathname = path.normalize(decodeURIComponent(url.parse(req.url).pathname));
+	const relative_pathname = path.join(root, decoded_pathname);
+
+	if (index && decoded_pathname === '/') {
+		 fs.readFile(path.join(root,index), 'ascii', (err, data) => {
+					res.write(data);
+					return res.end();
+		 });
+	} else {
+
+	fs.lstat(relative_pathname, function(err, stats) {
+		if (err) {
+			res.writeHead(404);
+			return res.end("404 Not Found");
+		}
+
+		if (stats.isFile()) {
+			checkAuthorization(req, res, path.dirname(relative_pathname), () => {
 				// Pre-Load checks
 				const mimeType = mimeMap[path.extname(relative_pathname)];
 				const filename = path.basename(relative_pathname);
@@ -52,7 +52,7 @@ module.exports = function(root, index, req, res) {
 
 					if ((stats.size - Number(rangeStart)) < ((Number(rangeEnd) + 1) - Number(rangeStart))) {
 						/**
-						 *  TODO: Diagnose ERR_CONTENT_LENGTH_MISMATCH that seems to be coming from cases
+						 *	TODO: Diagnose ERR_CONTENT_LENGTH_MISMATCH that seems to be coming from cases
 						 * where content length is set incorrectly when the "end" chunk of a file is requested.
 						 */
 					}
@@ -75,60 +75,60 @@ module.exports = function(root, index, req, res) {
 				res.writeHead(isPartialRequest ? 206 : 200, mimeType ? responseHeader : null);
 				dataStream.pipe(res);
 			});
-    } else if (stats.isDirectory()) {
-      checkAuthorization(req, res, relative_pathname, () => {
-        fs.readdir(relative_pathname, (err, files) => {
-          const parent_dir = path.dirname(decoded_pathname);
-          res.writeHead(200, {"Content-Type": "text/html"});
-          res.write(
+		} else if (stats.isDirectory()) {
+			checkAuthorization(req, res, relative_pathname, () => {
+				fs.readdir(relative_pathname, (err, files) => {
+					const parent_dir = path.dirname(decoded_pathname);
+					res.writeHead(200, {"Content-Type": "text/html"});
+					res.write(
 `<html>
 <meta charset="UTF-8">
-  <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-      ul {
-        list-style-type: none;
-        display: inline-block;
-      }
-    </style>
-  </head>
-  <body>
-    <ul>
-    ${parent_dir ? `<li><a href="${parent_dir}">..</a></li>`:''}
-    ${files.map(file =>`<li><a href="${path.join(decoded_pathname, encodeURIComponent(file))}">${file}</a></li>`).join('\n\t')}
-    </ul>
-  </body>
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<style>
+			ul {
+				list-style-type: none;
+				display: inline-block;
+			}
+		</style>
+	</head>
+	<body>
+		<ul>
+		${parent_dir ? `<li><a href="${parent_dir}">..</a></li>`:''}
+		${files.map(file =>`<li><a href="${path.join(decoded_pathname, encodeURIComponent(file))}">${file}</a></li>`).join('\n\t')}
+		</ul>
+	</body>
 </html>`);
-          return res.end();
-        })
-      })
-    } else {
-      res.writeHead(404);
-      return res.end("404 Not Found");
-    }
-  });
-  }
+					return res.end();
+				})
+			})
+		} else {
+			res.writeHead(404);
+			return res.end("404 Not Found");
+		}
+	});
+	}
 };
 
 function checkAuthorization (req, res, checkPath, callback) {
-  fs.readFile(path.join(checkPath, ".authorized_users"), (err, data) => {
-    if (err) {
-      if (err.code == 'ENOENT') {
-        callback();
-        return;
-      }
-      log(`Authorization Failure: ${err}`);
-    }
+	fs.readFile(path.join(checkPath, ".authorized_users"), (err, data) => {
+		if (err) {
+			if (err.code == 'ENOENT') {
+				callback();
+				return;
+			}
+			log(`Authorization Failure: ${err}`);
+		}
 
-    const name = getUserName(req);
-    if (data.includes(name)) {
-      callback();
-    } else {
-      res.writeHead(403, {"Content-Type": "text/plain"});
+		const name = getUserName(req);
+		if (data.includes(name)) {
+			callback();
+		} else {
+			res.writeHead(403, {"Content-Type": "text/plain"});
 			res.end("Access Forbidden");
-      log(`unauthorized access attempt by ${name} to ${checkPath}`);
-    }
-  });
+			log(`unauthorized access attempt by ${name} to ${checkPath}`);
+		}
+	});
 }
 
 /**

@@ -37,11 +37,11 @@ module.exports.init = () => {
 		}
 	}
 
-  authorized_credentials = users.split('\n').filter(row => row != '').map(row => {
+	authorized_credentials = users.split('\n').filter(row => row != '').map(row => {
 		const parts = row.split(' ');
-		return {name: parts[0], salt: parts[1], pwHash: parts[2]};
+		return { name: parts[0], salt: parts[1], pwHash: parts[2] };
 	}).reduce((acc, user) => {
-		acc[user.name] = {salt: user.salt, pwHash: user.pwHash};
+		acc[user.name] = { salt: user.salt, pwHash: user.pwHash };
 		return acc;
 	}, {});
 };
@@ -56,7 +56,7 @@ module.exports.authorize = function authorize(req, res, callback) {
 	}
 
 	// check whether this url should be protected
-	if(req.url && !req.url.includes("private")) {
+	if (req.url && !req.url.includes("private")) {
 		// If this is not private, let it through.
 		callback();
 		return true;
@@ -91,7 +91,7 @@ module.exports.authorize = function authorize(req, res, callback) {
 
 function accountForm(req, res) {
 	if (req.method == "GET") {
-		res.writeHead(200, {'Content-Type': 'text/html'});
+		res.writeHead(200, { 'Content-Type': 'text/html' });
 		res.end(`
 <html>
 	<body>
@@ -107,43 +107,43 @@ function accountForm(req, res) {
 `);
 	}
 
-	else if (req.method=="POST") {
+	else if (req.method == "POST") {
 		let body = [];
-			req.on('data', (chunk) => {
-				body.push(chunk);
-			}).on('end', () => {
-				body = parse(Buffer.concat(body).toString());
-				// at this point, `body` has the entire request body stored in it as a string
-				const username = path.normalize(body.username);
-				const password = path.normalize(body.password);
-				const salt = randomBytes(64).toString('base64');
+		req.on('data', (chunk) => {
+			body.push(chunk);
+		}).on('end', () => {
+			body = parse(Buffer.concat(body).toString());
+			// at this point, `body` has the entire request body stored in it as a string
+			const username = path.normalize(body.username);
+			const password = path.normalize(body.password);
+			const salt = randomBytes(64).toString('base64');
 
-				if (username.includes(' ') || username.length > 64) {
-					// Username Validation failed
-					log(`Invalid username request ${username}`);
-					res.writeHead(400);
-					res.end('Invalid Username');
+			if (username.includes(' ') || username.length > 64) {
+				// Username Validation failed
+				log(`Invalid username request ${username}`);
+				res.writeHead(400);
+				res.end('Invalid Username');
+				return;
+			}
+
+			getPasswordHash(salt, password, (err, pwHash) => {
+
+				if (err) {
+					log(err);
+					res.writeHead(500);
+					res.end();
 					return;
 				}
 
-				getPasswordHash(salt, password, (err, pwHash) => {
-
-					if (err) {
-						log(err);
-						res.writeHead(500);
-						res.end();
-						return;
-					}
-
-					const userRecord = `${username} ${salt} ${pwHash.toString('base64')}`;
-					log(`New account request (${username})`);
-					fs.appendFile(pathToUserAccountRequests, userRecord + '\n', function (err) {
-						if (err) throw err;
-						res.writeHead(200, {'Content-Type': 'text/plain'});
-						res.end('Account requested.');
-					});
+				const userRecord = `${username} ${salt} ${pwHash.toString('base64')}`;
+				log(`New account request (${username})`);
+				fs.appendFile(pathToUserAccountRequests, userRecord + '\n', function (err) {
+					if (err) throw err;
+					res.writeHead(200, { 'Content-Type': 'text/plain' });
+					res.end('Account requested.');
 				});
 			});
+		});
 	}
 }
 

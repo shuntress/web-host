@@ -54,8 +54,8 @@ const serverCertificatePath = path.join(__dirname, '..', 'administration', 'cert
  * openssl req -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 -out certificate.pem
  */
 const httpsOptions = {
-  key: fs.readFileSync(serverPrivateKeyPath),
-  cert: fs.readFileSync(serverCertificatePath)
+	key: fs.readFileSync(serverPrivateKeyPath),
+	cert: fs.readFileSync(serverCertificatePath)
 };
 
 /**
@@ -70,19 +70,19 @@ auth.init();
  * This is the secure entrypoint
  */
 const httpsServer = https.createServer(httpsOptions, function (req, res) {
-  log(`(https ${httpsPort} secure) ${req.method} request for ${httpsPort} ${req.headers.host}${req.url} from ${req.connection.remoteAddress}`);
-  req.url = path.normalize(req.url);
+	log(`(https ${httpsPort} secure) ${req.method} request for ${httpsPort} ${req.headers.host}${req.url} from ${req.connection.remoteAddress}`);
+	req.url = path.normalize(req.url);
 
-  /**
-   * auth.js checks for valid credentials in the authentication header.
-   * It calls the handleHttpsRequest callback if a valid user:password
-   * combination is present and returns 401 otherwise.
-   */
-  auth.authorize(req, res, () => {
-    if (!httpsDispatch(req, res)) {
-      index(httpsRoot, pickIndexFile(req.headers.host),  req, res);
-    }
-  });
+	/**
+	 * auth.js checks for valid credentials in the authentication header.
+	 * It calls the handleHttpsRequest callback if a valid user:password
+	 * combination is present and returns 401 otherwise.
+	 */
+	auth.authorize(req, res, () => {
+		if (!httpsDispatch(req, res)) {
+			index(httpsRoot, pickIndexFile(req.headers.host), req, res);
+		}
+	});
 });
 const httpsDispatch = dispatch.getDispatcher(httpsControllerDir, httpsRoot, httpsServer);
 httpsServer.listen(httpsPort);
@@ -92,9 +92,9 @@ httpsServer.listen(httpsPort);
  * This just redirects to the secure endpoint.
  */
 const httpServer = http.createServer(function (req, res) {
-  let redirectLocation = "https://" + req.headers.host + req.url;
-  log(`(http ${httpPort}) ${req.method} request for ${httpPort} ${req.headers.host}${req.url} from ${req.connection.remoteAddress} redirecting to ${redirectLocation}`);
-  res.writeHead(302, {'Location': redirectLocation});
+	let redirectLocation = "https://" + req.headers.host + req.url;
+	log(`(http ${httpPort}) ${req.method} request for ${httpPort} ${req.headers.host}${req.url} from ${req.connection.remoteAddress} redirecting to ${redirectLocation}`);
+	res.writeHead(302, {'Location': redirectLocation});
 	res.end();
 });
 httpServer.listen(httpPort);
@@ -113,10 +113,10 @@ httpServer.listen(httpPort);
  * @param {bool} isPrivate Flag to separate http/https
  */
 const pickIndexFile = (domain, isPrivate) => {
-  /**
-   * // TODO: Many requests come in with domain=undefined
-   * from automatic tools. Add something here to handle that.
-   */
+	/**
+	 * // TODO: Many requests come in with domain=undefined
+	 * from automatic tools. Add something here to handle that.
+	 */
 
 	if (domain && domain.includes('www.1-800-frogs.com')) {
 		return 'frogs.html';

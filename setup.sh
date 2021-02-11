@@ -3,7 +3,7 @@ printf "git"
 if ! type -P git > /dev/null
 then
 	printf "..."
-  apt-get install git
+	apt-get install git
 fi
 echo "✓"
 
@@ -19,7 +19,7 @@ printf "web-core"
 if [ ! -d web-core ]
 then
 printf "..."
-  git clone https://github.com/shuntress/web-core.git
+	git clone https://github.com/shuntress/web-core.git
 fi
 echo "✓"
 

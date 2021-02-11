@@ -79,11 +79,11 @@ const dispatch = (req, res, controllers, controllerRoot) => {
 	let match = false;
 
 	if (parts.length > 1) {
-		
+
 		const action = parts.pop();
 		const controller = parts.pop();
 		const controllerPath = path.join(...parts);
-		
+
 		const find = path.join(controllerRoot, controllerPath, controller + '.js');
 
 		/**
@@ -96,18 +96,18 @@ const dispatch = (req, res, controllers, controllerRoot) => {
 		if (action == 'init') return false;
 
 		// check for controller in controller collection
-		if(action && controller && controllerPath) {
-			if(controllers[find]) {
-				if(controllers[find].controller[action]) {
-					const query = Array.from(parsedUrl.searchParams.keys()).reduce((a, k) => {return Object.assign({[k]: parsedUrl.searchParams.get(k)}, a);}, {});
+		if (action && controller && controllerPath) {
+			if (controllers[find]) {
+				if (controllers[find].controller[action]) {
+					const query = Array.from(parsedUrl.searchParams.keys()).reduce((a, k) => { return Object.assign({ [k]: parsedUrl.searchParams.get(k) }, a); }, {});
 					log(`dispatching request for ${action} on ${controller} in ${controllerPath} with ${JSON.stringify(query)}`);
 					controllers[find].controller[action](req, res, query);
-					match=true;
+					match = true;
 				}
 			}
 		}
-	}  
-  return match;
+	}
+	return match;
 }
 
 /**
@@ -139,10 +139,10 @@ const scan = (dir, controllers, wwwRoot, server) => {
 			log(`found controller ${controllerPath}`);
 			// If its a file append to controllers
 			let controller = require(controllerPath);
-			controllers[controllerPath] = {controller};
+			controllers[controllerPath] = { controller };
 			if (controller.init) {
 				let config = controller.init(wwwRoot, server);
-				if(config && config.webSocket) {
+				if (config && config.webSocket) {
 					controllers[controllerPath].webSocket = config.webSocket;
 				}
 			}
