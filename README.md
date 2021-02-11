@@ -16,10 +16,9 @@ can be fully reviewed in an hour and installed/run from
 source with no dependencies ([one dependency](https://nodejs.org)).
 
 To that end, you may notice that package.json and node_modules are
-missing. there are no grunt, trevor, cargo, slurp, package, jarvis,
+missing. There are no grunt, trevor, cargo, slurp, package, jarvis,
 babel, lint, or docker files. There are no subdirectories (except git).
 
-The included (short) setup script should handle the most complicated
-part (systemd configuration) of installing this software. The setup
-script targets *nix & systemd but all the javascript should be
-system-agnostic.
+The included (short) setup script targets *nix & systemd (the javascript
+should be all be system-agnostic) and handles the most complicated part
+(systemd configuration) of installing this software.

@@ -1,6 +1,7 @@
-# Add your content in the same folder as this file.
-# The wildcard star here will prevent your content affecting version control.
-# That allows you to add your content without affecting version control.
+# Add your content to the folder this file is in.
+
+# The wildcard star tells git to ignore everything in this folder.
+# This prevents your content from affecting version control.
 *
 
 # Do not ignore .gitignore or example static content
