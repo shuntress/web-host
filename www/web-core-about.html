@@ -45,7 +45,7 @@
 			Simple
 		</li>
 		<li>
-			<a href="../web-core" title="Go To Code">Open</a>
+			<a href="https://github.com/shuntress/web-core" title="Go To Code">Open</a>
 		</li>
 		<li>
 			No dependencies (<a href="https://nodejs.org/en/">one dependency</a>)
@@ -65,27 +65,17 @@
 	<h2>
 		Setup
 	</h2>
-	<p>
-		You may notice the node_modules folder is
-		missing and that there are no grunt, trevor, cargo,
-		slurp, package, jarvis, babel, lint, or
-		docker files. There are no subdirectories
-		(except git).
-
-		The most complex part of installing this
-		software is basic systemd configuration.
-	</p>
 
 	<p>
 		Pick a folder to contain your website.
 
 		Then, if you trust me, just super-user do
-		<a href="setup.sh">setup.sh</a> in that folder.
+		<a href="https://github.com/shuntress/web-core/blob/master/setup.sh">setup.sh</a> in that folder.
 
 		Blindly sudo-ing random scripts from the
 		internet is obviously not a best practice.
 		Please take a moment to read the
-		<a href="setup.sh">setup script</a>
+		<a href="https://github.com/shuntress/web-core/blob/master/setup.sh">setup script</a>
 		before you run it with elevated
 		permissions or follow along and type it out for
 		yourself.
@@ -177,11 +167,10 @@ echo "if \$programname == 'nodeserver' then ~" >> $logConf
 		</li>
 		<li>
 			<p>
-				Place some files into either the www-public for http and www-private
-				for https folders. Everything in the www-private
-				folder will be protected by the
-				username:password configured in
-				`basic-auth-credentials.txt`.
+				Anything with <strong>private</strong> in the URL will require a login.
+			</p>
+			<p>
+				Any directory containing a file named <strong>.authorized_users</strong> will require the logged in user's name to be included in the (newline-separated) list of users allowed to view anything in that directory.
 			</p>
 		</li>
 		<li>
@@ -189,7 +178,7 @@ echo "if \$programname == 'nodeserver' then ~" >> $logConf
 			<pre><kbd>systemctl status nodeserver</kbd></pre>
 			<p class="note"> systemctl can show
 				service status if you did not skip
-				step 8. If you did skip step 8, then the terminal where you ran `node site.js` should display the log
+				step 8. If you did skip step 8, then the terminal where you ran `node src/site.js` should display the log
 				output.</p>
 			and navigate a browser to
 			<pre><kbd>http://[yourip]/</kbd></pre>
@@ -203,11 +192,15 @@ echo "if \$programname == 'nodeserver' then ~" >> $logConf
 			<p>
 			<pre><kbd>https://[yourip]/account</kbd></pre>
 			This form will add a username, password hash, and salt to
-			<pre><kbd>account_creation_requests.txt</kbd></pre>
+			<pre><kbd>administration/account_creation_requests.txt</kbd></pre>
 			</p>
 			<p>
 				Move the line for the account(s) you wish to create from there to
-			<pre><kbd>user_credentials.txt</kbd></pre> (create this file if it does not exist)
+			<pre><kbd>administration/user_credentials.txt</kbd></pre> (create this file if it does not exist)
+			</p>
+			<p>
+				restart the server
+			<pre><kbd>systemctl restart nodeserver</kbd></pre>
 			</p>
 		</li>
 	</ol>
@@ -217,16 +210,19 @@ echo "if \$programname == 'nodeserver' then ~" >> $logConf
 	</h2>
 	<p>
 		Adding server-side code
-		is a little more complicated than static content. <a href="dispatch.js">dispatch.js</a> handles
-		scanning for controller modules when the server (re)starts. Currently in this context,
-		a 'controller module' is 'any file in www-actions-public or www-actions-private'.
-		Any `.js` file that sets a function on `module.exports` will be called when you go to
-		its URL.
+		is a little more complicated than static content.
+	</p>
 
-		The setup script copies `example.js` to www-actions-private. which will be:
-	<pre><kbd>
-		https://[yourip]/example/index
-		</kbd></pre>
+	<p>
+		<a href="https://github.com/shuntress/web-core/blob/master/src/dispatch.js">dispatch.js</a> handles
+		scanning for controller modules when the service starts.
+	</p>
+	<p> A 'controller module' is any .js file in the web-core/controllers directory.
+		Controllers found in this scan will be called when the server receives a request
+		where the path matches down to an exported function.
+	</p>
+	<p>
+		https://{yourdomain}/{path}/{to}/{controller}/{controller name}/{function on module.exports}
 	</p>
 
 	<h2 class="note">
@@ -236,17 +232,10 @@ echo "if \$programname == 'nodeserver' then ~" >> $logConf
 		<li>
 			<p>
 				The basic auth credentials,
-				certificate, and secret key are in web-core and
+				certificate, and secret key are in web-core/administration/ and
 				noted in .gitignore to help prevent them being
 				accidentally included in source control
 				management history.</p>
-		</li>
-
-		<li>
-			<p>
-				The web root folders are outside the web-core
-				repository because site content management is
-				not handled by this project.</p>
 		</li>
 
 		<li>

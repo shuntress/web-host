@@ -121,7 +121,7 @@ function checkAuthorization (req, res, checkPath, callback) {
 		}
 
 		const name = getUserName(req);
-		if (data.includes(name)) {
+		if (data.toString().split('\n').map(authorizedUser => authorizedUser.replace('\r','')).includes(name)) {
 			callback();
 		} else {
 			res.writeHead(403, {"Content-Type": "text/plain"});
@@ -165,5 +165,5 @@ function getUserName(req) {
 	const auth = req.headers.authorization;
 	const parts = auth && auth.split(' ');
 	const credentials = parts && parts.length > 1 && Buffer.from(parts[1], 'base64').toString('ascii').split(':');
-	return credentials[0];
+	return credentials && credentials[0];
 }

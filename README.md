@@ -1,24 +1,25 @@
 
 ## What is this?
- A few small Javascript modules
-using only node's built-ins to serve static
-content, a basic dispatcher that routes
-requests to controller modules for dynamic content,
-and basic authentication to separate public and private pages.
+ A few small Javascript modules using only node's built-ins for easy
+ small-scale web hosting.
+
+ - static (filesystem index)
+ - dynamic (server-side javascript)
+ - secure authentication ([HTTP authentication](https://tools.ietf.org/html/rfc7617), TLS/SSL, pbkdf2)
+ - simple authorization (optional per-directory user list)
 
 ## Why?
-It should be easy to put basic content on the web.
+Small-scale web publishing should be simple.
 
-This is my take on a minimalist
-fully-featured web host with source code that
-can be reviewed and understood in an hour or
-two.
+This is my take on a minimalist web host with source code that
+can be fully reviewed in an hour and installed/run from
+source with no dependencies ([one dependency](https://nodejs.org)).
 
-To that end, you may notice the node_modules folder is
-missing and that there are no grunt, trevor, cargo,
-slurp, package, jarvis, babel, lint, or
-docker files. There are no subdirectories
-(except git).
+To that end, you may notice that package.json and node_modules are
+missing. there are no grunt, trevor, cargo, slurp, package, jarvis,
+babel, lint, or docker files. There are no subdirectories (except git).
 
-The most complex part of installing this
-software is basic systemd configuration.
+The included (short) setup script should handle the most complicated
+part (systemd configuration) of installing this software. The setup
+script targets *nix & systemd but all the javascript should be
+system-agnostic.

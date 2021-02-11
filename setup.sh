@@ -1,4 +1,4 @@
-
+# confirm git install
 printf "git"
 if ! type -P git > /dev/null
 then
@@ -7,6 +7,7 @@ then
 fi
 echo "✓"
 
+# confirm node install
 printf "node"
 if ! type -P node > /dev/null
 then
@@ -15,16 +16,25 @@ printf "..."
 fi
 echo "✓"
 
+# If the current directory is not web-core, check if it exists in the current directory.
+# This will skip the web-core download if you already cloned it and are running setup.sh from the repository.
 printf "web-core"
-if [ ! -d web-core ]
+if [ ! $(basename "$PWD") = web-core ]
 then
-printf "..."
-	git clone https://github.com/shuntress/web-core.git
+	# If the current directory does not contain web-core, download it.
+	# This handles running setup.sh directly from the web
+	if [ ! -d web-core ]
+	then
+	printf "..."
+		git clone https://github.com/shuntress/web-core.git
+	fi
+	echo "✓"
+
+	cd web-core
 fi
-echo "✓"
 
-cd web-core 
-
+# Generate certificates
+# These will work for security purposes but cause a warning in the browser due to being untrusted.
 printf "TLS key/cert"
 if [ ! -f key.pem ]
 then
@@ -38,6 +48,7 @@ printf "Node port access capability..."
 setcap CAP_NET_BIND_SERVICE=+ep $(type -p node)
 echo "✓"
 
+# Create and fill out the systemd service configuration.
 nodepath=$(type -P node)
 installpath=$(pwd)
 printf "service definition"
@@ -68,3 +79,10 @@ then
 	echo "if \$programname == 'nodeserver' then ~" >> $logConf
 fi
 echo "✓"
+
+echo "Start service..."
+systemctl start nodeserver
+
+
+echo "Done."
+echo "Try http://localhost/web-core-about.html"
