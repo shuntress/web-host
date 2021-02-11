@@ -89,7 +89,7 @@ then
 	echo "Description=Node.js Server" >> $unitFile
 	echo "" >> $unitFile
 	echo "[Service]" >> $unitFile
-	printf "ExecStart=%s %s/site.js" $nodepath $installpath >> $unitFile
+	printf "ExecStart=%s %s/src/site.js" $nodepath $installpath >> $unitFile
 	echo "Restart=always" >> $unitFile
 	echo "# Restart service after 10 seconds if node service crashes" >> $unitFile
 	echo " RestartSec=10" >> $unitFile

@@ -35,10 +35,10 @@ const httpPort = 80;
  */
 const indexFile = 'index.html';
 const httpsPort = 443;
-const httpsRoot = path.join(__dirname, 'www');
-const httpsControllerDir = path.join(__dirname, 'controllers');
-const serverPrivateKeyPath = path.join(__dirname, 'key.pem');
-const serverCertificatePath = path.join(__dirname, 'certificate.pem');
+const httpsRoot = path.join(__dirname, '..', 'www');
+const httpsControllerDir = path.join(__dirname, '..', 'controllers');
+const serverPrivateKeyPath = path.join(__dirname, '..', 'administration', 'key.pem');
+const serverCertificatePath = path.join(__dirname, '..', 'administration', 'certificate.pem');
 
 /**
  * SECRET Key and PUBLIC Certificate

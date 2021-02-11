@@ -23,10 +23,13 @@ const path = require('path');
 const { randomBytes, pbkdf2 } = require('crypto');
 const log = require(path.join(__dirname, 'log.js'));
 
+const pathToUserCredentials = path.join(__dirname, '..', 'administration', 'user_credentials.txt');
+const pathToUserAccountRequests = path.join(__dirname, '..', 'administration', 'account_creation_requests.txt');
+
 module.exports.init = () => {
 	let users = '';
 	try {
-		users = fs.readFileSync(path.join(__dirname, 'user_credentials.txt'), 'ascii');
+		users = fs.readFileSync(pathToUserCredentials, 'ascii');
 	}
 	catch (err) {
 		if (err.code != 'ENOENT') {
@@ -134,7 +137,7 @@ function accountForm(req, res) {
 
 					const userRecord = `${username} ${salt} ${pwHash.toString('base64')}`;
 					log(`New account request (${username})`);
-					fs.appendFile(path.join(__dirname, 'account_creation_requests.txt'), userRecord + '\n', function (err) {
+					fs.appendFile(pathToUserAccountRequests, userRecord + '\n', function (err) {
 						if (err) throw err;
 						res.writeHead(200, {'Content-Type': 'text/plain'});
 						res.end('Account requested.');
