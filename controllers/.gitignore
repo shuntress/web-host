@@ -1,5 +1,6 @@
-# Ignore everything in this directory.
 # Add site content here without affecting version control.
+# The wildcard star here will cause git to ignore everything in this directory.
+# That allows you to add your content without affecting version control.
 *
 
 # Do not ignore .gitignore or example controller

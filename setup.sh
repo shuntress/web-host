@@ -19,7 +19,7 @@ printf "web-core"
 if [ ! -d web-core ]
 then
 printf "..."
-  git clone http://www.shuntress.net/public/projects/web-core/.git
+  git clone https://github.com/shuntress/web-core.git
 fi
 echo "✓"
 
@@ -29,46 +29,7 @@ printf "TLS key/cert"
 if [ ! -f key.pem ]
 then
 	printf "..."
-	openssl req -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 -out certificate.pem
-fi
-echo "✓"
-
-echo "web directories"
-printf "\tpublic actions"
-if [ ! -d ../www-actions-public ]
-then
-	printf "..."
-  mkdir ../www-actions-public
-fi
-echo "✓"
-
-printf "\tprivate actions"
-if [ ! -d ../www-actions-private ]
-then
-	printf "..."
-	mkdir ../www-actions-private
-	cp example.js ../www-actions-private
-	echo "Go to https://localhost/example/index to test"
-fi
-echo "✓"
-
-printf "\tpublic"
-if [ -d ../www-public ]
-then
-	printf "..."
-	mkdir ../www-public
-	echo "Createing public web directory..."
-	echo "Test file. Please ignore." > ../www-public/ThisIsATest.txt
-	echo "or try http://localhost/ThisIsATest.txt"
-fi
-echo "✓"
-
-printf "\tprivate"
-if [ -d ../www-private ]
-then
-	printf "..."
-	echo "Createing private web directory..."
-	mkdir ../www-private
+	openssl req -newkey rsa:2048 -nodes -keyout administration/key.pem -x509 -days 365 -out administration/certificate.pem
 fi
 echo "✓"
 
