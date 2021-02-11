@@ -118,7 +118,7 @@
 		<li>
 			<p>
 				Generate the server key/certificate <span class="note">(This prompts for a few user inputs)</span>
-			<pre><kbd>openssl req -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 -out certificate.pem</kbd></pre>
+			<pre><kbd>openssl req -newkey rsa:2048 -nodes -keyout administration/key.pem -x509 -days 365 -out administration/certificate.pem</kbd></pre>
 			</p>
 		</li>
 
@@ -145,7 +145,7 @@ echo "[Unit]" >> $unitFile
 echo "Description=Node.js Server" >> $unitFile
 echo "" >> $unitFile
 echo "[Service]" >> $unitFile
-printf "ExecStart=%s %s/site.js" $nodepath $installpath >> $unitFile
+printf "ExecStart=%s %s/src/site.js" $nodepath $installpath >> $unitFile
 echo "Restart=always" >> $unitFile
 echo "# Restart service after 10 seconds if node service crashes" >> $unitFile
 echo " RestartSec=10" >> $unitFile
