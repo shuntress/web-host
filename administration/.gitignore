@@ -1,5 +1,0 @@
-# This folder holds the HTTPS encryption keys and user credential files
-# It is important that those remain secret and out of version control history.
-account_creation_requests.txt
-user_credentials.txt
-*.pem

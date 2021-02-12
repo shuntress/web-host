@@ -1,0 +1,20 @@
+# This specifies which files to ignore for version control history.
+# This is not for configuration. You do not need to make any changes here.
+
+# Ignore key/certificate files
+*.pem
+
+# Ignore everything in the site content directories.
+# Those directories (the actual directories, not the list here in this file) are where you should put your files.
+controllers/*
+www/*
+
+# Ignore site-specific operational data
+administration/user_credentials.txt
+administration/account_creation_requests.txt
+administration/config.json
+
+# Exempt the example files from the wild-card ignore.
+!controllers/web-core-example.js
+!www/web-core-about.html
+
