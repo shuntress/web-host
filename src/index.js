@@ -1,9 +1,10 @@
 /**
- * This module handles displaying the list of
- * Folders/Files available in a given folder
+ * This module handles displaying the list of Folders/Files available in a
+ * given folder
  * 
- * It parses the path out of the URL in the request
- * Then loads the contents of that directory.
+ * It parses the path out of the URL in the request then loads the contents of
+ * that file or directory. File content is simply returned. Directory content
+ * is rendered with a template.
  */
 
 const fs = require('fs');
@@ -13,103 +14,146 @@ const path = require('path');
 const log = require(path.join(__dirname, 'log.js'));
 const auth = require(path.join(__dirname, 'auth.js'));
 
-module.exports = function(root, index, req, res) {
-	const decoded_pathname = path.normalize(decodeURIComponent(url.parse(req.url).pathname));
-	const relative_pathname = path.join(root, decoded_pathname);
+let config = null;
+try {
+	config = require(path.join(__dirname, '..', 'administration', 'config.json'));
+} catch (_e) {}
 
-	if (index && decoded_pathname === '/') {
-		 fs.readFile(path.join(root,index), 'ascii', (err, data) => {
-					res.write(data);
-					return res.end();
-		 });
-	} else {
+module.exports = function(root, req, res) {
+	const webPath = path.normalize(decodeURIComponent(url.parse(req.url).pathname));
+	const absoluteSystemPath = path.join(root, webPath);
 
-	fs.lstat(relative_pathname, function(err, stats) {
+	fs.lstat(absoluteSystemPath, function(err, stats) {
 		if (err) {
 			res.writeHead(404);
 			return res.end("404 Not Found");
 		}
 
 		if (stats.isFile()) {
-			auth.checkAuthorization(req, res, path.dirname(relative_pathname), () => {
-				// Pre-Load checks
-				const mimeType = mimeMap[path.extname(relative_pathname)];
-				const filename = path.basename(relative_pathname);
-
-				// "Resume Download" partial file
-				let isPartialRequest = (mimeType == 'audio/mpeg' || mimeType == 'audio/flac') && req.headers.range && req.headers.range.includes('=') && req.headers.range.includes('-');
-				let rangeStart=0;
-				let rangeEnd = stats.size - 1;
-				if (isPartialRequest) {
-					let rangeString = req.headers.range.split('=')[1].split('-');
-					rangeStart = rangeString[0];
-					rangeEnd = rangeString[1];
-					if (rangeEnd == 'null' || rangeEnd == '') rangeEnd = stats.size-1;
-
-					if (isNaN(rangeStart) || (Number(rangeStart) > stats.size-1) || (rangeEnd != 'null' && isNaN(rangeEnd)) || (rangeEnd != 'null' && (Number(rangeEnd) > stats.size-1))) {
-						res.writeHead(416);
-						return res.end('Range Not Satisfiable');
-					}
-
-					if ((stats.size - Number(rangeStart)) < ((Number(rangeEnd) + 1) - Number(rangeStart))) {
-						/**
-						 *	TODO: Diagnose ERR_CONTENT_LENGTH_MISMATCH that seems to be coming from cases
-						 * where content length is set incorrectly when the "end" chunk of a file is requested.
-						 */
-					}
-				}
-
-				// Load
-				dataStream = fs.createReadStream(relative_pathname, {start: Number(rangeStart), end: Number(rangeEnd)});
-				dataStream.on('error', function(){
-					res.writeHead(404);
-					return res.end("404 Not Found");
-				});
-				let responseHeader = {
-					"Content-Type": mimeType
-				};
-				if (isPartialRequest) {
-					responseHeader["Accept-Ranges"] = "bytes";
-					responseHeader["Content-Range"] = `bytes ${rangeStart}-${rangeEnd}/${stats.size}`;
-					responseHeader["Content-Length"] = (Number(rangeEnd) + 1) - Number(rangeStart);
-				}
-				res.writeHead(isPartialRequest ? 206 : 200, mimeType ? responseHeader : null);
-				dataStream.pipe(res);
+			auth.checkAuthorization(req, res, path.dirname(absoluteSystemPath), () => {
+				loadFile(req, res, stats, absoluteSystemPath);
 			});
 		} else if (stats.isDirectory()) {
-			auth.checkAuthorization(req, res, relative_pathname, () => {
-				fs.readdir(relative_pathname, (err, files) => {
-					const parent_dir = path.dirname(decoded_pathname);
-					res.writeHead(200, {"Content-Type": "text/html"});
-					res.write(
-`<html>
-<meta charset="UTF-8">
-	<head>
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<style>
-			ul {
-				list-style-type: none;
-				display: inline-block;
-			}
-		</style>
-	</head>
-	<body>
-		<ul>
-		${parent_dir ? `<li><a href="${parent_dir}">..</a></li>`:''}
-		${files.map(file =>`<li><a href="${path.join(decoded_pathname, encodeURIComponent(file))}">${file}</a></li>`).join('\n\t')}
-		</ul>
-	</body>
-</html>`);
-					return res.end();
-				})
+			auth.checkAuthorization(req, res, absoluteSystemPath, () => {
+				loadDirectory(req, res, stats, webPath, absoluteSystemPath);
 			})
 		} else {
 			res.writeHead(404);
 			return res.end("404 Not Found");
 		}
 	});
+}
+
+
+/**
+ * This function loads the requested file content and returns it through the
+ * given Node response object.
+ */
+function loadFile(req, res, stats, absoluteSystemPath) {
+	// Pre-Load checks
+	const mimeType = mimeMap[path.extname(absoluteSystemPath)];
+	const filename = path.basename(absoluteSystemPath);
+
+	// Basis for content length calculation
+	let rangeStart=0;
+	let rangeEnd = stats.size - 1;
+
+	// "Resume Download" partial file
+	let isPartialRequest = (mimeType == 'audio/mpeg' || mimeType == 'audio/flac') && req.headers.range && req.headers.range.includes('=') && req.headers.range.includes('-');
+	if (isPartialRequest) {
+		let rangeString = req.headers.range.split('=')[1].split('-');
+		rangeStart = rangeString[0];
+		rangeEnd = rangeString[1];
+		if (rangeEnd == 'null' || rangeEnd == '') rangeEnd = stats.size-1;
+
+		if (isNaN(rangeStart) || (Number(rangeStart) > stats.size-1) || (rangeEnd != 'null' && isNaN(rangeEnd)) || (rangeEnd != 'null' && (Number(rangeEnd) > stats.size-1))) {
+			res.writeHead(416);
+			return res.end('Range Not Satisfiable');
+		}
 	}
-};
+
+	// Load file content
+	dataStream = fs.createReadStream(absoluteSystemPath, {start: Number(rangeStart), end: Number(rangeEnd)});
+	dataStream.on('error', function(){
+		res.writeHead(404);
+		return res.end("404 Not Found");
+	});
+
+	// Set response headers
+	const responseHeader = {
+		"Content-Type": mimeType,
+		"Content-Length": (Number(rangeEnd) + 1) - Number(rangeStart)
+	};
+	if (isPartialRequest) {
+		responseHeader["Accept-Ranges"] = "bytes";
+		responseHeader["Content-Range"] = `bytes ${rangeStart}-${rangeEnd}/${stats.size}`;
+	}
+	res.writeHead(isPartialRequest ? 206 : 200, mimeType ? responseHeader : null);
+
+	// Connect datastream to output
+	dataStream.pipe(res);
+}
+
+/**
+ * This function finds or generates an index of the given directory. If an
+ * index is found either in the requested directory or configured for the
+ * current domain root, then a redirect to the found index is sent back through
+ * the given Node response object. If no index is found, one is generated from
+ * a template and sent back as the content of the response (no redirect).
+ */
+function loadDirectory(req, res, stats, webPath, absoluteSystemPath) {
+	fs.readdir(absoluteSystemPath, (err, files) => {
+		// If this request is for the root directory, check for a specifically configured index file matched on domain name.
+		// If this is not a domain root or if no index is configured, check for a file named "index"
+		const index = ((webPath === '/') && pickIndexFromConfig(req.headers.host)) || files.find(file => file === "index.html");
+
+		if (index) {
+			// If an index file has been found, redirect to that instead of generating an index for this directory.
+			res.writeHead("302", {"Location": path.join(webPath, index)});
+			return res.end();
+			return;
+		}
+
+		// Otherwise, since no index was found, generate and index for this directory using this template.
+		const parentWebPath = path.dirname(webPath);
+		const output =
+`<html>
+<meta charset="UTF-8">
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link rel="stylesheet" href="/style.css">
+		<link rel="stylesheet" href="/layout.css">
+	</head>
+	<body>
+		<div id="content">
+			<h2>${webPath}</h2>
+			<ul>
+				${parentWebPath ? `<li><a href="${parentWebPath}">..</a></li>`:''}
+				${files.map(file =>`<li><a href="${path.join(webPath, encodeURIComponent(file))}">${file}</a></li>`).join('\n\t')}
+			</ul>
+			<address>Modified: ${stats.atime.toLocaleDateString("en-US", {month: "short", day: "2-digit", year: "numeric"})}</address>
+		</div>
+	</body>
+</html>`;
+		res.writeHead(200, {"Content-Type": "text/html", "Content-Length": output.length});
+		return res.end(output);
+	});
+}
+
+/**
+ * Match the current domain against the (optional) configured list of indices.
+ *
+ * This configuration comes from web-core/administration/config.json and is
+ * expected to be a simple key:value pair of domain:indexFile
+ */
+function pickIndexFromConfig(domain) {
+	if (config && config.indices) {
+		let match = Object.keys(config.indices).find(key => key === domain);
+		if (match) {
+			return config.indices[match];
+		}
+	}
+}
 
 /**
  * This is fine.

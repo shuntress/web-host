@@ -35,7 +35,7 @@ const httpPort = 80;
  */
 const indexFile = 'index.html';
 const httpsPort = 443;
-const httpsRoot = path.join(__dirname, '..', 'www');
+const wwwRoot = path.join(__dirname, '..', 'www');
 const httpsControllerDir = path.join(__dirname, '..', 'controllers');
 const serverPrivateKeyPath = path.join(__dirname, '..', 'administration', 'key.pem');
 const serverCertificatePath = path.join(__dirname, '..', 'administration', 'certificate.pem');
@@ -80,11 +80,11 @@ const httpsServer = https.createServer(httpsOptions, function (req, res) {
 	 */
 	auth.authorize(req, res, () => {
 		if (!httpsDispatch(req, res)) {
-			index(httpsRoot, pickIndexFile(req.headers.host), req, res);
+			index(wwwRoot, req, res);
 		}
 	});
 });
-const httpsDispatch = dispatch.getDispatcher(httpsControllerDir, httpsRoot, httpsServer);
+const httpsDispatch = dispatch.getDispatcher(httpsControllerDir, wwwRoot, httpsServer);
 httpsServer.listen(httpsPort);
 
 /**
@@ -99,31 +99,3 @@ const httpServer = http.createServer(function (req, res) {
 });
 httpServer.listen(httpPort);
 
-/**
- * Pick a specific 'index'/'default'/'landing' page
- * depending on the domain of the request.
- * 
- * I added this because I bought the domain 1-800-frogs.com
- * and I wanted to be able to display something specific to that
- * site.
- * 
- * This probably should be in the index.js module but I'll just leave
- * it here for now.
- * @param {string} domain  The domain to match
- * @param {bool} isPrivate Flag to separate http/https
- */
-const pickIndexFile = (domain, isPrivate) => {
-	/**
-	 * // TODO: Many requests come in with domain=undefined
-	 * from automatic tools. Add something here to handle that.
-	 */
-
-	if (domain && domain.includes('www.1-800-frogs.com')) {
-		return 'frogs.html';
-	}
-	if (domain && domain.includes('www.teabagmedaddy.com')) {
-		return 'mv.html';
-	}
-
-	return indexFile;
-};
