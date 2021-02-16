@@ -11,6 +11,7 @@ const url = require('url');
 const path = require('path');
 
 const log = require(path.join(__dirname, 'log.js'));
+const auth = require(path.join(__dirname, 'auth.js'));
 
 module.exports = function(root, index, req, res) {
 	const decoded_pathname = path.normalize(decodeURIComponent(url.parse(req.url).pathname));
@@ -30,7 +31,7 @@ module.exports = function(root, index, req, res) {
 		}
 
 		if (stats.isFile()) {
-			checkAuthorization(req, res, path.dirname(relative_pathname), () => {
+			auth.checkAuthorization(req, res, path.dirname(relative_pathname), () => {
 				// Pre-Load checks
 				const mimeType = mimeMap[path.extname(relative_pathname)];
 				const filename = path.basename(relative_pathname);
@@ -76,7 +77,7 @@ module.exports = function(root, index, req, res) {
 				dataStream.pipe(res);
 			});
 		} else if (stats.isDirectory()) {
-			checkAuthorization(req, res, relative_pathname, () => {
+			auth.checkAuthorization(req, res, relative_pathname, () => {
 				fs.readdir(relative_pathname, (err, files) => {
 					const parent_dir = path.dirname(decoded_pathname);
 					res.writeHead(200, {"Content-Type": "text/html"});
@@ -110,27 +111,6 @@ module.exports = function(root, index, req, res) {
 	}
 };
 
-function checkAuthorization (req, res, checkPath, callback) {
-	fs.readFile(path.join(checkPath, ".authorized_users"), (err, data) => {
-		if (err) {
-			if (err.code == 'ENOENT') {
-				callback();
-				return;
-			}
-			log(`Authorization Failure: ${err}`);
-		}
-
-		const name = getUserName(req);
-		if (data.toString().split('\n').map(authorizedUser => authorizedUser.replace('\r','')).includes(name)) {
-			callback();
-		} else {
-			res.writeHead(403, {"Content-Type": "text/plain"});
-			res.end("Access Forbidden");
-			log(`unauthorized access attempt by ${name} to ${checkPath}`);
-		}
-	});
-}
-
 /**
  * This is fine.
  *
@@ -144,6 +124,7 @@ const mimeMap = {
 	".txt": "text/plain",
 	".json": "text/json",
 	".mp3": "audio/mpeg",
+	".mp4": "video/mp4",
 	".flac": "audio/flac",
 	".jpg": "image/jpeg",
 	".jpeg": "image/jpeg",
@@ -155,15 +136,3 @@ const mimeMap = {
 	".markdown": "text/markdown"
 };
 
-/**
- * Get current user.
- *
- * TODO: Fix this
- * This should definitely go somewhere better
- */
-function getUserName(req) {
-	const auth = req.headers.authorization;
-	const parts = auth && auth.split(' ');
-	const credentials = parts && parts.length > 1 && Buffer.from(parts[1], 'base64').toString('ascii').split(':');
-	return credentials && credentials[0];
-}

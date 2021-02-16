@@ -147,6 +147,42 @@ function accountForm(req, res) {
 	}
 }
 
+module.exports.checkAuthorization = function checkAuthorization(req, res, checkPath, callback) {
+	fs.readFile(path.join(checkPath, ".authorized_users"), (err, data) => {
+		if (err) {
+			if (err.code == 'ENOENT') {
+				callback();
+				return;
+			}
+			log(`Authorization Failure: ${err}`);
+		}
+
+		const name = getUserName(req);
+		if (data.toString().split('\n').map(authorizedUser => authorizedUser.replace('\r','')).includes(name)) {
+			callback();
+		} else {
+			res.writeHead(403, {"Content-Type": "text/plain"});
+			res.end("Access Forbidden");
+			log(`unauthorized access attempt by ${name} to ${checkPath}`);
+		}
+	});
+}
+
 function getPasswordHash(salt, password, callback) {
 	pbkdf2(password, salt, 10000, 64, 'sha512', callback);
 }
+
+/**
+ * Get current user name from auth headers.
+ *
+ * @param {HttpRequest} req Node's request object
+ *
+ * @return {string?} User name
+ */
+function getUserName(req) {
+	const auth = req.headers.authorization;
+	const parts = auth && auth.split(' ');
+	const credentials = parts && parts.length > 1 && Buffer.from(parts[1], 'base64').toString('ascii').split(':');
+	return credentials && credentials[0];
+}
+
