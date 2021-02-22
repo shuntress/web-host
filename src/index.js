@@ -125,7 +125,7 @@ function loadDirectory(req, res, stats, webPath, absoluteSystemPath) {
 		<link rel="stylesheet" href="/layout.css">
 	</head>
 	<body>
-		<div id="content">
+		<div class="content">
 			<h2>${webPath}</h2>
 			<ul>
 				${parentWebPath ? `<li><a href="${parentWebPath}">..</a></li>`:''}
