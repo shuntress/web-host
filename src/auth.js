@@ -32,13 +32,17 @@ module.exports.init = () => {
 		users = fs.readFileSync(pathToUserCredentials, 'ascii');
 	}
 	catch (err) {
-		if (err.code != 'ENOENT') {
+		if (err.code == 'ENOENT') {
+			// User credentials file does not exist, so we create it here.
+			fs.open(pathToUserCredentials, 'w', (err) => { if (err) throw err; });
+		} else {
 			throw err;
 		}
 	}
 
-	authorized_credentials = users.split('\n').filter(row => row != '').map(row => {
-		const parts = row.split(' ');
+	// Parse user credentials
+	authorized_credentials = users.split('\n').filter(row => row.length > 3).map(row => {
+		const parts = row.replace('\r', '').split(' ');
 		return { name: parts[0], salt: parts[1], pwHash: parts[2] };
 	}).reduce((acc, user) => {
 		acc[user.name] = { salt: user.salt, pwHash: user.pwHash };
