@@ -14,18 +14,17 @@ This small web host uses only node's built-ins to handle:
 Small-scale web publishing should be simple.
 
 To that end, you may notice that package.json and node_modules are
-missing. There are no grunt, trevor, cargo, slurp, package, jarvis,
+missing. There are no package, grunt, trevor, cargo, slurp, jarvis,
 babel, lint, or docker files. The .git folder is the only dev tool
 sub-directory.
 
-The included (short) setup script handles installing this software as a persistent service.
-It targets [systemd](https://systemd.io/) but the javascript it installs is system-agnostic.
+The setup script installs this software as a persistent service and targets [systemd](https://systemd.io/) but the project is otherwise system-agnostic.
 
 ## Quick Start
 
-[Install Git](https://git-scm.com/downloads)
+Install Git: [https://git-scm.com/downloads](https://git-scm.com/downloads)
 
-[Install Node](https://nodejs.org/)
+Install Node: [https://nodejs.org/](https://nodejs.org/)
 
 Clone the repository: `git clone https://github.com/shuntress/web-core.git`
 
@@ -38,12 +37,12 @@ Add some static content:
  - `mkdir web-core/www/private`
  - `echo "private test file" > web-core/www/private/testfile.txt`
 
-[Check the test file](https://localhost/testfile.txt)
+Check the test file: [https://localhost/testfile.txt](https://localhost/testfile.txt)
 
-[Check the private test file](https://localhost/private/testfile.txt)
+Check the private test file: [https://localhost/private/testfile.txt](https://localhost/private/testfile.txt)
 
 ### Account setup
-[Request a new account](https://localhost/account)
+Request a new account: [https://localhost/account](https://localhost/account)
 
 Stop the site (`CTRL+C` if it's already running) 
 
@@ -51,5 +50,5 @@ Approve your request by copying the contents of `web-core/administration/account
 
 Restart the site: `node web-core/src/site.js`.
 
-[Check the private test file](https://localhost/private/testfile.txt)
+Check the private test file: [https://localhost/private/testfile.txt](https://localhost/private/testfile.txt)
 
