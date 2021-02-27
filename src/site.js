@@ -59,26 +59,18 @@ const httpsOptions = {
 };
 
 /**
- * Setup the authentication module.
- * This will load user credentials from the disk
- * in to memory to be checked against the auth
- * header on secure requests.
- */
-auth.init();
-
-/**
  * This is the secure entrypoint
  */
 const httpsServer = https.createServer(httpsOptions, function (req, res) {
-	log(`(https ${httpsPort} secure) ${req.method} request for ${httpsPort} ${req.headers.host}${req.url} from ${req.connection.remoteAddress}`);
-	req.url = path.normalize(req.url);
+	log(`(https ${httpsPort} secure) ${req.method} request for ${httpsPort} ${req.headers.host}${req.url} from ${req.socket.remoteAddress}`);
+	req.url = path.normalize(req.url ?? '');
 
 	/**
 	 * auth.js checks for valid credentials in the authentication header.
 	 * It calls the handleHttpsRequest callback if a valid user:password
 	 * combination is present and returns 401 otherwise.
 	 */
-	auth.authorize(req, res, () => {
+	auth.authenticate(req, res, () => {
 		if (!httpsDispatch(req, res)) {
 			index(wwwRoot, req, res);
 		}
@@ -92,8 +84,8 @@ httpsServer.listen(httpsPort);
  * This just redirects to the secure endpoint.
  */
 const httpServer = http.createServer(function (req, res) {
-	let redirectLocation = "https://" + req.headers.host + req.url;
-	log(`(http ${httpPort}) ${req.method} request for ${httpPort} ${req.headers.host}${req.url} from ${req.connection.remoteAddress} redirecting to ${redirectLocation}`);
+	let redirectLocation = "https://" + (req.headers.host ?? '') + (req.url ?? '');
+	log(`(http ${httpPort}) ${req.method} request for ${httpPort} ${req.headers.host}${req.url} from ${req.socket.remoteAddress} redirecting to ${redirectLocation}`);
 	res.writeHead(302, {'Location': redirectLocation});
 	res.end();
 });

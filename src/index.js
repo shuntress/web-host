@@ -30,11 +30,11 @@ module.exports = function(root, req, res) {
 		}
 
 		if (stats.isFile()) {
-			auth.checkAuthorization(req, res, path.dirname(absoluteSystemPath), () => {
+			auth.authorize(req, res, root, path.dirname(absoluteSystemPath), () => {
 				loadFile(req, res, stats, absoluteSystemPath);
 			});
 		} else if (stats.isDirectory()) {
-			auth.checkAuthorization(req, res, absoluteSystemPath, () => {
+			auth.authorize(req, res, root, absoluteSystemPath, () => {
 				loadDirectory(req, res, stats, webPath, absoluteSystemPath);
 			})
 		} else {
