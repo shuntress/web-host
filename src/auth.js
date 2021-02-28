@@ -1,24 +1,24 @@
 /**
- * This module handles user access control
+ * This module manages user access.
  *
- * It checks if a user has an authorized account when
- * they access any resource with "private" in the URL.
- * Yes, I know this may lead to some false positives
- * but I want the bluntest possible way to ensure that
- * if you make an album called "private" that it will
- * actually be covered. Be aware that in the event of a
- * typo ("prvirate") this will fail open. The tradeoff
- * is that there should be no way to force or trick a
- * private resource to load without authentication by
- * cleverly manipulating the URL.
+ * Public resources (default) do not require authentication.
+ * Private resources (anything with "private" it its URL) are accessible only
+ * to authenticated users.
+ * Privacy may be specified further through authorization. Adding a file named
+ * ".authorized_users" to any directory will allow access (to that directory and
+ * its contents recursively) to the users specified in the .authorized_users
+ * file (plaintext line break separated user names)
  *
- * This module also controls the "Request Account" page
- * ( https://[my.website]/account )
- * When a user visits that URL and requests an account,
- * this module puts their account information in to the
- * "account_creation_requests.txt" file in the web-core
- * directory which must then be copied to the
- * "user_credentials.txt" file to activate their account.
+ * Checking "private" URLs this way may lead to some false positives but I want
+ * the bluntest possible way to ensure that the privacy of any given resource is
+ * inherent in its identifier. Be aware that a typo ("prvirate") will "fail
+ * open".
+ *
+ * This module also controls the "Request Account" page (
+ * https://[my.website]/account ) When a user visits that URL and requests an
+ * account, this module puts their account information in to the
+ * "account_creation_requests.txt" file in the web-core directory which must
+ * then be copied to the "user_credentials.txt" file to activate their account.
  */
 
 const fs = require('fs');
@@ -33,9 +33,8 @@ const pathToUserAccountRequests = path.join(__dirname, '..', 'administration', '
 
 
 /**
- * Setup handles loading user credentials from
- * the disk in to memory to be checked against
- * the auth header on secure requests.
+ * Setup handles loading user credentials from the disk in to memory to be
+ * checked against the auth header on secure requests.
  */
 let openAccountRequests = 0;
 let users = '';
@@ -51,7 +50,7 @@ catch (err) {
 	}
 }
 
-// Parse user credentials
+// Parse user credentials into memory
 const authorized_credentials = users.replace('\r', '').split('\n').filter(row => row.length > 3).map(row => {
 	if (row.length > 300) log(`[Warning] Abnormally long user record. Potentially malicious user input or mistakenly missing line break. Check ${pathToUserCredentials}`);
 	const parts = row.split(' ');
@@ -72,15 +71,21 @@ try {
 log(`[Info] Open Account Requests: ${openAccountRequests}`);
 
 /**
- * This middleware fuction authenticates the user to allow access to
- * private resources.
+ * Authenticate the user to allow access to private resources.
  *
- * @param {node's request object} req 
- * @param {node's response object} res 
- * @param {function} callback 
+ * This function prompts for and compares the HTTP Basic Authentication header
+ * against current user credentials.
+ *
+ * This function also handles sending the "new account" form which allows users
+ * to request an account and handles adding those requests to the pending account
+ * requests.
+ *
+ * @param {node's request object} req  https://nodejs.org/api/http.html#http_class_http_clientrequest
+ * @param {node's response object} res https://nodejs.org/api/http.html#http_class_http_serverresponse
+ * @param {function} callback          Request handler that called here to check authentication.
  */
 module.exports.authenticate = function authorize(req, res, callback) {
-	// Check if the user is loading the account request form
+	// Check if the user is requesting the "new account" form
 	const parsedUrl = url.parse(req.url);
 	const urlparts = parsedUrl.pathname.split('/').filter(part => part != '');
 	if (urlparts.length == 1 && urlparts[0] == 'account') {
@@ -110,7 +115,13 @@ module.exports.authenticate = function authorize(req, res, callback) {
 	const salt = authorized_credentials[username].salt;
 
 	getPasswordHash(salt, password, (err, pwHash) => {
-		if (authorized_credentials[username].pwHash == pwHash.toString('base64')) {
+		if (err) {
+			console.log(err);
+			res.writeHead(500);
+			res.end();
+			return;
+		}
+		if (authorized_credentials[username].pwHash.trim() == pwHash.toString('base64')) {
 			callback();
 		} else {
 			log(`[Info] Unauthorized: Wrong Password. Username: ${username}`);
@@ -162,7 +173,7 @@ function sendAccountForm(req, res) {
 			const password = path.normalize(body.password);
 			const salt = randomBytes(64).toString('base64');
 
-			if(openAccountRequests > 100) {
+			if (openAccountRequests > 100) {
 				log(`[Warning] Too many open account requests`);
 				res.writeHead(500, { 'Content-Type': 'text/plain' });
 				res.end('Too many open account requests.');
@@ -191,11 +202,15 @@ function sendAccountForm(req, res) {
 }
 
 /**
- * 
- * @param {*} req 
- * @param {*} res 
- * @param {*} checkPath 
- * @param {*} callback 
+ * Check for authorization file. Scan up the tree from the requested resource to the root.
+ * In the first auth file found, check if the current user is on the list of authorized users
+ * for the requested resource. If not auth file is found, default to open.
+ *
+ * @param {Node's request object} req  https://nodejs.org/api/http.html#http_class_http_clientrequest
+ * @param {Node's response object} res https://nodejs.org/api/http.html#http_class_http_serverresponse
+ * @param {string} root                The absolute path to the site's base folder.
+ * @param {string} checkPath           An absolute path somewhere between the root and the requested resource.
+ * @param {function} callback          Request handler that called here to check authorization.
  */
 module.exports.authorize = function checkAuthorization(req, res, root, checkPath, callback) {
 	fs.readFile(path.join(checkPath, ".authorized_users"), (err, data) => {
@@ -216,17 +231,16 @@ module.exports.authorize = function checkAuthorization(req, res, root, checkPath
 		const name = getUserName(req);
 
 		// If the user is not authenticated, prompt for them to log in
-		// TODO: Debug an issue with this. Navigating to an authorized non-private resource seems to not work with some (???) accounts
 		if (!name) {
 			sendLoginPrompt(res);
 			return;
 		}
 
 		// Check whether the logged in user is on the list of authorized users for this resource.
-		if (data.toString().split('\n').map(authorizedUser => authorizedUser.replace('\r','')).includes(name)) {
+		if (data.toString().split('\n').map(authorizedUser => authorizedUser.replace('\r', '')).includes(name)) {
 			callback();
 		} else {
-			res.writeHead(403, {"Content-Type": "text/plain"});
+			res.writeHead(403, { "Content-Type": "text/plain" });
 			res.end("Access Forbidden");
 			log(`[Warning] unauthorized access attempt by ${name} to ${checkPath}`);
 		}
