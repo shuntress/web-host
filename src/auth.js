@@ -23,6 +23,7 @@
 
 const fs = require('fs');
 const url = require('url');
+const os = require('os');
 const { parse } = require('querystring');
 const path = require('path');
 const { randomBytes, pbkdf2 } = require('crypto');
@@ -51,7 +52,7 @@ catch (err) {
 }
 
 // Parse user credentials into memory
-const authorized_credentials = users.replace('\r', '').split('\n').filter(row => row.length > 3).map(row => {
+const authorized_credentials = users.split(os.EOL).filter(row => row.length > 3).map(row => {
 	if (row.length > 300) log(`[Warning] Abnormally long user record. Potentially malicious user input or mistakenly missing line break. Check ${pathToUserCredentials}`);
 	const parts = row.split(' ');
 	return { name: parts[0], salt: parts[1], pwHash: parts[2] };
@@ -61,14 +62,14 @@ const authorized_credentials = users.replace('\r', '').split('\n').filter(row =>
 }, {});
 
 try {
-	openAccountRequests = Math.max(0, fs.readFileSync(pathToUserAccountRequests, 'utf8').split('\n').length - 1);
+	openAccountRequests = Math.max(0, fs.readFileSync(pathToUserAccountRequests, 'utf8').split(os.EOL).length - 1);
 } catch (err) {
 	if (err.code != 'ENOENT') {
 		throw err;
 	}
 }
 
-log(`[Info] Open Account Requests: ${openAccountRequests}`);
+log.info(`Open Account Requests: ${openAccountRequests}`);
 
 /**
  * Authenticate the user to allow access to private resources.
@@ -189,7 +190,7 @@ function sendAccountForm(req, res) {
 
 					const userRecord = `${username} ${salt} ${pwHash.toString('base64')}`;
 					log(`[Info] New account request (${username})`);
-					fs.appendFile(pathToUserAccountRequests, userRecord + '\n', function (err) {
+					fs.appendFile(pathToUserAccountRequests, userRecord + os.EOL, function (err) {
 						if (err) throw err;
 						openAccountRequests++;
 						res.writeHead(200, { 'Content-Type': 'text/plain' });
@@ -237,7 +238,7 @@ module.exports.authorize = function checkAuthorization(req, res, root, checkPath
 		}
 
 		// Check whether the logged in user is on the list of authorized users for this resource.
-		if (data.toString().split('\n').map(authorizedUser => authorizedUser.replace('\r', '')).includes(name)) {
+		if (data.toString().split(os.EOL).includes(name)) {
 			callback();
 		} else {
 			res.writeHead(403, { "Content-Type": "text/plain" });
