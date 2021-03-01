@@ -18,7 +18,7 @@ missing. There are no package, grunt, trevor, cargo, slurp, jarvis,
 babel, lint, or docker files. The .git folder is the only dev tool
 sub-directory.
 
-The setup script installs this software as a persistent service and targets [systemd](https://systemd.io/) but the project is otherwise system-agnostic.
+The setup script targets [systemd](https://systemd.io/) to install this software as a persistent service but the project is otherwise system-agnostic.
 
 ## Quick Start
 
