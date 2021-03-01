@@ -53,7 +53,7 @@ catch (err) {
 
 // Parse user credentials into memory
 const authorized_credentials = users.split(os.EOL).filter(row => row.length > 3).map(row => {
-	if (row.length > 300) log(`[Warning] Abnormally long user record. Potentially malicious user input or mistakenly missing line break. Check ${pathToUserCredentials}`);
+	if (row.length > 300) log.warning(log.tag('Auth'), `Abnormally long user record. Potentially malicious user input or mistakenly missing line break. Check ${pathToUserCredentials}`);
 	const parts = row.split(' ');
 	return { name: parts[0], salt: parts[1], pwHash: parts[2] };
 }).reduce((acc, user) => {
@@ -69,7 +69,7 @@ try {
 	}
 }
 
-log.info(`Open Account Requests: ${openAccountRequests}`);
+log.info(log.tag('Startup'), `Open Account Requests: ${openAccountRequests}`);
 
 /**
  * Authenticate the user to allow access to private resources.
@@ -107,7 +107,7 @@ module.exports.authenticate = function authorize(req, res, callback) {
 	const credentials = parts && parts.length > 1 && Buffer.from(parts[1], 'base64').toString('ascii').split(':');
 
 	if (!credentials || authorized_credentials[credentials[0]] == null) {
-		log('Unauthorized: credentials not provided');
+		log.info(log.tag('Auth'), 'Unauthorized: credentials not provided');
 		sendLoginPrompt(res);
 		return;
 	}
@@ -117,7 +117,7 @@ module.exports.authenticate = function authorize(req, res, callback) {
 
 	getPasswordHash(salt, password, (err, pwHash) => {
 		if (err) {
-			console.log(err);
+			log.error(log.tag('Auth'), err);
 			res.writeHead(500);
 			res.end();
 			return;
@@ -125,7 +125,7 @@ module.exports.authenticate = function authorize(req, res, callback) {
 		if (authorized_credentials[username].pwHash.trim() == pwHash.toString('base64')) {
 			callback();
 		} else {
-			log(`[Info] Unauthorized: Wrong Password. Username: ${username}`);
+			log.warning(log.tag('Auth'), `Unauthorized: Wrong Password. Username: ${username}`);
 			sendLoginPrompt(res);
 		}
 	});
@@ -164,7 +164,7 @@ function sendAccountForm(req, res) {
 			// at this point, `body` has the entire request body stored in it as a string
 			if (/[^A-z^0-9]/.test(body.username) || body.username.length > 64) {
 				// Username Validation failed
-				log(`[Warning] Invalid username request ${JSON.stringify(body.username)}`);
+				log.warning(log.tag('Auth'), `Invalid username request ${JSON.stringify(body.username)}`);
 				res.writeHead(400);
 				res.end('Invalid Username');
 				return;
@@ -175,21 +175,21 @@ function sendAccountForm(req, res) {
 			const salt = randomBytes(64).toString('base64');
 
 			if (openAccountRequests > 100) {
-				log(`[Warning] Too many open account requests`);
+				log.warning(log.tag('Auth'), `Too many open account requests`);
 				res.writeHead(500, { 'Content-Type': 'text/plain' });
 				res.end('Too many open account requests.');
 			} else {
 				getPasswordHash(salt, password, (err, pwHash) => {
 
 					if (err) {
-						log(err);
+						log.error(log.tag('Auth'), err);
 						res.writeHead(500);
 						res.end();
 						return;
 					}
 
 					const userRecord = `${username} ${salt} ${pwHash.toString('base64')}`;
-					log(`[Info] New account request (${username})`);
+					log.info(log.tag('Auth'), `New account request (${username})`);
 					fs.appendFile(pathToUserAccountRequests, userRecord + os.EOL, function (err) {
 						if (err) throw err;
 						openAccountRequests++;
@@ -226,7 +226,7 @@ module.exports.authorize = function checkAuthorization(req, res, root, checkPath
 				}
 				return;
 			}
-			log(`[Error] Authorization Failure: ${err}`);
+			log.error(log.tags('Auth'), `Authorization Failure: ${err}`);
 		}
 
 		const name = getUserName(req);
@@ -243,7 +243,7 @@ module.exports.authorize = function checkAuthorization(req, res, root, checkPath
 		} else {
 			res.writeHead(403, { "Content-Type": "text/plain" });
 			res.end("Access Forbidden");
-			log(`[Warning] unauthorized access attempt by ${name} to ${checkPath}`);
+			log.warning(log.tags('Auth'), `unauthorized access attempt by ${name} to ${checkPath}`);
 		}
 	});
 }

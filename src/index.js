@@ -11,7 +11,6 @@ const fs = require('fs');
 const url = require('url');
 const path = require('path');
 
-const log = require(path.join(__dirname, 'log.js'));
 const auth = require(path.join(__dirname, 'auth.js'));
 
 let config = null;

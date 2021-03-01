@@ -95,7 +95,7 @@ const dispatch = (req, res, controllers, controllerRoot) => {
 			if (controllers[find]) {
 				if (controllers[find].controller[action]) {
 					const query = Array.from(parsedUrl.searchParams.keys()).reduce((a, k) => { return Object.assign({ [k]: parsedUrl.searchParams.get(k) }, a); }, {});
-					log(`dispatching request for ${action} on ${controller} in ${controllerPath} with ${JSON.stringify(query)}`);
+					log.info(log.tags('Routing'), `dispatching request for ${action} on ${controller} in ${controllerPath} with ${JSON.stringify(query)}`);
 					controllers[find].controller[action](req, res, query);
 					match = true;
 				}
@@ -123,15 +123,12 @@ const scan = (dir, controllers, wwwRoot, server) => {
 	// load dir 
 	const nodes = fs.readdirSync(dir);
 
-	// Collect websockets from controllers
-	const webSockets = {};
-
 	// Check each file, if its a directory appaend to dir and pass to scan
 	nodes.forEach(node => {
 		const controllerPath = path.join(dir, node);
 		const stats = fs.lstatSync(controllerPath);
 		if (stats.isFile() && path.extname(controllerPath) == ".js") {
-			log(`found controller ${controllerPath}`);
+			log.info(log.tags('Startup'), `found controller ${controllerPath}`);
 			// If its a file append to controllers
 			let controller = require(controllerPath);
 			controllers[controllerPath] = { controller };

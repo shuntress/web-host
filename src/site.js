@@ -62,7 +62,7 @@ const httpsOptions = {
  * This is the secure entrypoint
  */
 const httpsServer = https.createServer(httpsOptions, function (req, res) {
-	log(`(https ${httpsPort} secure) ${req.method} request for ${httpsPort} ${req.headers.host}${req.url} from ${req.socket.remoteAddress}`);
+	log.info(log.tags('Request', httpsPort, req.method), JSON.stringify({from: req.socket.remoteAddress, for: `${req.headers.host}${req.url}`}));
 	req.url = path.normalize(req.url ?? '');
 
 	/**
@@ -71,6 +71,10 @@ const httpsServer = https.createServer(httpsOptions, function (req, res) {
 	 * combination is present and returns 401 otherwise.
 	 */
 	auth.authenticate(req, res, () => {
+		if (req.url == path.normalize('/private/status')) {
+			log.sendStatusPage(req, res);
+			return;
+		}
 		if (!httpsDispatch(req, res)) {
 			index(wwwRoot, req, res);
 		}
@@ -85,7 +89,7 @@ httpsServer.listen(httpsPort);
  */
 const httpServer = http.createServer(function (req, res) {
 	let redirectLocation = "https://" + (req.headers.host ?? '') + (req.url ?? '');
-	log(`(http ${httpPort}) ${req.method} request for ${httpPort} ${req.headers.host}${req.url} from ${req.socket.remoteAddress} redirecting to ${redirectLocation}`);
+	log.info(log.tags('Request', httpPort, req.method, 'Redirect'), JSON.stringify({from: req.socket.remoteAddress, for: `${req.headers.host}${req.url}`, redirectTo: redirectLocation}));
 	res.writeHead(302, {'Location': redirectLocation});
 	res.end();
 });

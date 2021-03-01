@@ -13,6 +13,7 @@ www/*
 administration/user_credentials.txt
 administration/account_creation_requests.txt
 administration/config.json
+administration/dailies.log
 
 # Exempt the example files from the wild-card ignore.
 !controllers/web-core-example.js
