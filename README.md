@@ -28,7 +28,8 @@ Install Node: [https://nodejs.org/](https://nodejs.org/)
 
 Clone the repository: `git clone https://github.com/shuntress/web-core.git`
 
-Create your certificate: `openssl req -newkey rsa:2048 -nodes -keyout web-core/administration/key.pem -x509 -days 365 -out web-core/administration/certificate.pem`
+Create your certificate: `openssl req -newkey rsa:2048 -nodes -keyout web-core/administration/key.pem -x509 -days 365 -out web-core/administration/certificate.pem`  
+If this step is confusing, read up on [TLS](https://en.m.wikipedia.org/wiki/Transport_Layer_Security) and [Public Key Cryptography](https://en.m.wikipedia.org/wiki/Public-key_cryptography).
 
 Run the site: `node web-core/src/site.js`
 
