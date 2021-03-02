@@ -102,9 +102,13 @@ function loadFile(req, res, stats, absoluteSystemPath) {
  */
 function loadDirectory(req, res, stats, webPath, absoluteSystemPath) {
 	fs.readdir(absoluteSystemPath, (err, files) => {
-		// If this request is for the root directory, check for a specifically configured index file matched on domain name.
+
+		// If this request is for the root directory, check for an optionally
+		// configured index file matched on domain name. This configuration comes
+		// from web-core/administration/config.json and is expected to be a simple
+		// key:value pair of domain:indexFile
 		// If this is not a domain root or if no index is configured, check for a file named "index"
-		const index = ((webPath === '/') && pickIndexFromConfig(req.headers.host)) || files.find(file => file === "index.html");
+		const index = ((webPath === '/') && config?.indices[req.headers.host]) || files.find(file => file === "index.html");
 
 		if (index) {
 			// If an index file has been found, redirect to that instead of generating an index for this directory.
@@ -138,21 +142,6 @@ function loadDirectory(req, res, stats, webPath, absoluteSystemPath) {
 		res.writeHead(200, {"Content-Type": "text/html", "Content-Length": output.length});
 		return res.end(output);
 	});
-}
-
-/**
- * Match the current domain against the (optional) configured list of indices.
- *
- * This configuration comes from web-core/administration/config.json and is
- * expected to be a simple key:value pair of domain:indexFile
- */
-function pickIndexFromConfig(domain) {
-	if (config && config.indices) {
-		let match = Object.keys(config.indices).find(key => key === domain);
-		if (match) {
-			return config.indices[match];
-		}
-	}
 }
 
 /**
