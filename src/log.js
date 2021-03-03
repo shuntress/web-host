@@ -131,11 +131,64 @@ module.exports.sendStatusPage = (_req, res) => {
 		res.writeHead("200");
 		res.write(
 `<html>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<head>
+		<title>Today So Far</title>
 		<style>
 			.graph {
-				display: inline-block;
+				display: block;
+				text-align: center;
 				margin: 0 1rem;
+			}
+
+			.status-stamp {
+				display: inline-block;
+				padding: 0 1rem;
+				border: 1px solid black;
+			}
+
+			.status-stamp > h3 {
+				margin-top: .75rem;
+				border-bottom: 1px solid black;
+			}
+		</style>
+
+		<!--tree control script and styles from W3 Schools https://www.w3schools.com/howto/howto_js_treeview.asp -->
+		<style>
+			/* Remove default bullets */
+			ol {
+				list-style-type: none;
+			}
+
+			/* Style the caret/arrow */
+			.caret {
+				cursor: pointer;
+				user-select: none; /* Prevent text selection */
+			}
+
+			/* Create the caret/arrow with a unicode, and style it */
+			.caret::before {
+				content: "▷";
+				color: black;
+				display: inline-block;
+				margin-right: 6px;
+			}
+
+			/* Rotate the caret/arrow icon when clicked on (using JavaScript) */
+			.caret-down::before {
+				content: "▶";
+				transform: rotate(90deg);
+			}
+
+			/* Hide the nested list */
+			.nested {
+				display: none;
+			}
+
+			/* Show the nested list when the user clicks on the caret/arrow (with JavaScript) */
+			.active {
+				display: block;
 			}
 		</style>
 		<script>
@@ -148,8 +201,27 @@ module.exports.sendStatusPage = (_req, res) => {
 		return max;
 	}, 0);
 
+	res.write('<div class="status-stamp">\n');
+	res.write(`<h3>${(new Date(Date.now())).toLocaleDateString("en-US", {month: "short", day: "2-digit", year: "numeric", hour: "numeric", minute: "numeric"})}</h3>`);
+	res.write('<div>\n');
+	res.write(`
+		<div>
+			Load Avg. ${os.loadavg().map(o => `<strong>${o}</strong>`).join(' &#x2014; ')} <em>(over 1 &#x2014 5 &#x2014 15 minutes)</em>
+		</div>`);
+
+	res.write(`
+		<div>
+			Mem. <strong>${(os.freemem()/Math.pow(1024, 3)).toFixed(2)}</strong> / <strong>${(os.totalmem()/Math.pow(1024,3)).toFixed(2)}</strong> GiB <em>(free / total)</em>
+		</div>`);
+
+	res.write(`
+		<div>
+			Up for <strong>${Math.trunc(os.uptime() / 86400)}</strong> days
+		</div>`);
+	res.write('</div>');
+
 	res.write('<div class="graph">\t<pre>');
-	res.write('    &#x2553 Requests Per Hour       &#x2500&#x2556\n');
+	res.write('    &#x2553;&#x2500;&#x2500;&#x2500; Requests Per Hour &#x2500;&#x2500;&#x2500;&#x2500;&#x2556;\n');
 	for(var i=10;i>0;i--) {
 		let row = Object.keys(hours).reduce((line, hour) => {
 			if (hours[hour].total > line.label) line.label = hours[hour].total;
@@ -161,9 +233,46 @@ module.exports.sendStatusPage = (_req, res) => {
 	}
 	res.write(bottomLine);
 	res.write('</pre>\n</div>\n');
+	res.write('</div>\n<br>\n');
 
+	// HACK: helps render a more readable output in a relatively concise way but should be improved.
+	timeNameSequence = ["Midnight", "Noon", "Noon"];
+	timeNameIndex = 0;
+	res.write('<ol>\n');
+	// Build "details" data
+		Object.keys(hours).forEach(h => {
+			let hour=hours[h];
+			h = Number(h);
+			hour.start = h % 12 || timeNameSequence[timeNameIndex++ % timeNameSequence.length];
+			hour.end = (h + 1) % 12 || timeNameSequence[timeNameIndex++ % timeNameSequence.length];;
+			let digitCount = 0;
+			if (hour.pages[0]) digitCount = hour.pages[0].length;
+			res.write('<li>\n');
+			res.write(`<div class="caret"><b>${hour.start}${h % 12 ? ':00' : ''}</b> - <b>${hour.end}${(h + 1) % 12 ? ':00' : ''}</b>${ timeNameSequence.includes(hour.end) ? '' : `${(h + 1) < 12 ? "<em>am</em>" : "<em>pm</em>" }`} &#x2014; <strong>${hour.total}</strong> hits for <strong>${Object.keys(hour.pages).length}</strong> pages</div>\n`);
+			res.write('<ol class="nested">\n');
+			// TODO: Add a "Total redirects" stat for http->https redirects
+			res.write(Object.keys(hour.pages).map(key => ({page: key, hits: hour.pages[key]})).sort((a,b) => b.hits - a.hits).map(({page, hits}) => `<li>${hits.toString().padStart(digitCount, ' ')}: ${page}</li>`).join('\n'));
+			res.write('</ol>\n');
+			res.write('</li>\n');
+		});
+	res.write('</ol>\n');
+
+	res.write(`
+		<script>
+			var toggler = document.getElementsByClassName("caret");
+			var i;
+
+			for (i = 0; i < toggler.length; i++) {
+				toggler[i].addEventListener("click", function() {
+					this.parentElement.querySelector(".nested").classList.toggle("active");
+					this.classList.toggle("caret-down");
+				});
+			}
+		</script>
+`);
 	res.end(
 `	</body>
 </html>`);
 	});
 }
+
