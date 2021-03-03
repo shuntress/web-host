@@ -128,12 +128,61 @@ module.exports.sendStatusPage = (_req, res) => {
 			}
 		}
 
-		res.writeHead("200");
-		res.write(
-`<html>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
+		let max = Object.keys(hours).reduce((max, hour) => {
+			if (hours[hour].total > max) max = hours[hour].total;
+			return max;
+		}, 0);
+
+		const getPageHitsGraph = () => {
+			let out = '';
+			out += '<div class="graph">\t<pre>';
+			out += '    &#x2553;&#x2500;&#x2500;&#x2500; Requests Per Hour &#x2500;&#x2500;&#x2500;&#x2500;&#x2556;\n';
+			for(var i=10;i>0;i--) {
+				let row = Object.keys(hours).reduce((line, hour) => {
+					if (hours[hour].total > line.label) line.label = hours[hour].total;
+					line.data += (((hours[hour].total*100) / max) >= (i*10)) ? barChar : ' ';
+					return line;
+				}, {data: '', label: 0});
+				let scale = Math.trunc(row.label/(11-i));
+				out += `${(i==10||i==1?scale:"").toString().padEnd(4, ' ')}${wallChar} ${row.data} ${wallChar}`+ '\n';
+			}
+			out += bottomLine;
+			out += '</pre>\n</div>\n';
+			return out;
+		};
+
+		const getPageHitsList = () => {
+			let out = '';
+			// HACK: helps render a more readable output in a relatively concise way but should be improved.
+			timeNameSequence = ["Midnight", "Noon", "Noon"];
+			timeNameIndex = 0;
+			out += '<ol>\n';
+			// Build "details" data
+				Object.keys(hours).forEach(h => {
+					let hour=hours[h];
+					h = Number(h);
+					hour.start = h % 12 || timeNameSequence[timeNameIndex++ % timeNameSequence.length];
+					hour.end = (h + 1) % 12 || timeNameSequence[timeNameIndex++ % timeNameSequence.length];;
+					let digitCount = 0;
+					if (hour.pages[0]) digitCount = hour.pages[0].length;
+					out += '<li>\n';
+					out += `<div class="caret"><b>${hour.start}${h % 12 ? ':00' : ''}</b> - <b>${hour.end}${(h + 1) % 12 ? ':00' : ''}</b>${ timeNameSequence.includes(hour.end) ? '' : `${(h + 1) < 12 ? "<em>am</em>" : "<em>pm</em>" }`} &#x2014; <strong>${hour.total}</strong> hits for <strong>${Object.keys(hour.pages).length}</strong> pages</div>\n`;
+					out += '<ol class="nested">\n';
+					// TODO: Add a "Total redirects" stat for http->https redirects
+					out += Object.keys(hour.pages).map(key => ({page: key, hits: hour.pages[key]})).sort((a,b) => b.hits - a.hits).map(({page, hits}) => `<li>${hits.toString().padStart(digitCount, ' ')}: ${page}</li>`).join('\n');
+					out += '</ol>\n';
+					out += '</li>\n';
+				});
+			out += '</ol>\n';
+
+			return out;
+		};
+
+		const pageTemplate = `<!DOCTYPE html>
+<html>
 	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<title>Today So Far</title>
 		<style>
 			.graph {
@@ -151,6 +200,10 @@ module.exports.sendStatusPage = (_req, res) => {
 			.status-stamp > h3 {
 				margin-top: .75rem;
 				border-bottom: 1px solid black;
+			}
+
+			strong {
+				color: red;
 			}
 		</style>
 
@@ -191,73 +244,25 @@ module.exports.sendStatusPage = (_req, res) => {
 				display: block;
 			}
 		</style>
-		<script>
-			const logData = ${JSON.stringify(hours)};
-		</script>
 	</head>
-	<body>`);
-	let max = Object.keys(hours).reduce((max, hour) => {
-		if (hours[hour].total > max) max = hours[hour].total;
-		return max;
-	}, 0);
-
-	res.write('<div class="status-stamp">\n');
-	res.write(`<h3>${(new Date(Date.now())).toLocaleDateString("en-US", {month: "short", day: "2-digit", year: "numeric", hour: "numeric", minute: "numeric"})}</h3>`);
-	res.write('<div>\n');
-	res.write(`
-		<div>
-			Load Avg. ${os.loadavg().map(o => `<strong>${o}</strong>`).join(' &#x2014; ')} <em>(over 1 &#x2014 5 &#x2014 15 minutes)</em>
-		</div>`);
-
-	res.write(`
-		<div>
-			Mem. <strong>${(os.freemem()/Math.pow(1024, 3)).toFixed(2)}</strong> / <strong>${(os.totalmem()/Math.pow(1024,3)).toFixed(2)}</strong> GiB <em>(free / total)</em>
-		</div>`);
-
-	res.write(`
-		<div>
-			Up for <strong>${Math.trunc(os.uptime() / 86400)}</strong> days
-		</div>`);
-	res.write('</div>');
-
-	res.write('<div class="graph">\t<pre>');
-	res.write('    &#x2553;&#x2500;&#x2500;&#x2500; Requests Per Hour &#x2500;&#x2500;&#x2500;&#x2500;&#x2556;\n');
-	for(var i=10;i>0;i--) {
-		let row = Object.keys(hours).reduce((line, hour) => {
-			if (hours[hour].total > line.label) line.label = hours[hour].total;
-			line.data += (((hours[hour].total*100) / max) >= (i*10)) ? barChar : ' ';
-			return line;
-		}, {data: '', label: 0});
-		let scale = Math.trunc(row.label/(11-i));
-		res.write(`${(i==10||i==1?scale:"").toString().padEnd(4, ' ')}${wallChar} ${row.data} ${wallChar}`+ '\n');
-	}
-	res.write(bottomLine);
-	res.write('</pre>\n</div>\n');
-	res.write('</div>\n<br>\n');
-
-	// HACK: helps render a more readable output in a relatively concise way but should be improved.
-	timeNameSequence = ["Midnight", "Noon", "Noon"];
-	timeNameIndex = 0;
-	res.write('<ol>\n');
-	// Build "details" data
-		Object.keys(hours).forEach(h => {
-			let hour=hours[h];
-			h = Number(h);
-			hour.start = h % 12 || timeNameSequence[timeNameIndex++ % timeNameSequence.length];
-			hour.end = (h + 1) % 12 || timeNameSequence[timeNameIndex++ % timeNameSequence.length];;
-			let digitCount = 0;
-			if (hour.pages[0]) digitCount = hour.pages[0].length;
-			res.write('<li>\n');
-			res.write(`<div class="caret"><b>${hour.start}${h % 12 ? ':00' : ''}</b> - <b>${hour.end}${(h + 1) % 12 ? ':00' : ''}</b>${ timeNameSequence.includes(hour.end) ? '' : `${(h + 1) < 12 ? "<em>am</em>" : "<em>pm</em>" }`} &#x2014; <strong>${hour.total}</strong> hits for <strong>${Object.keys(hour.pages).length}</strong> pages</div>\n`);
-			res.write('<ol class="nested">\n');
-			// TODO: Add a "Total redirects" stat for http->https redirects
-			res.write(Object.keys(hour.pages).map(key => ({page: key, hits: hour.pages[key]})).sort((a,b) => b.hits - a.hits).map(({page, hits}) => `<li>${hits.toString().padStart(digitCount, ' ')}: ${page}</li>`).join('\n'));
-			res.write('</ol>\n');
-			res.write('</li>\n');
-		});
-	res.write('</ol>\n');
-
-	res.write(`
+	<body>
+		<div class="status-stamp">
+			<h3>${(new Date(Date.now())).toLocaleDateString("en-US", {month: "short", day: "2-digit", year: "numeric", hour: "numeric", minute: "numeric"})}</h3>
+			<div>
+			<div>
+				Load Avg. ${os.loadavg().map(o => `<strong>${o}</strong>`).join(' &#x2014; ')} <em>(over 1 &#x2014 5 &#x2014 15 minutes)</em>
+			</div>
+			<div>
+				Mem. <strong>${(os.freemem()/Math.pow(1024, 3)).toFixed(2)}</strong> / <strong>${(os.totalmem()/Math.pow(1024,3)).toFixed(2)}</strong> GiB <em>(free / total)</em>
+			</div>
+			<div>
+				Up for <strong>${Math.trunc(os.uptime() / 86400)}</strong> days
+			</div>
+		</div>
+		${getPageHitsGraph()}
+		</div>
+		<br>
+		${getPageHitsList()}
 		<script>
 			var toggler = document.getElementsByClassName("caret");
 			var i;
@@ -269,10 +274,11 @@ module.exports.sendStatusPage = (_req, res) => {
 				});
 			}
 		</script>
-`);
-	res.end(
-`	</body>
-</html>`);
+	</body>
+</html>
+`;
+		res.writeHead("200", {"Content-Type": "text/html", "Content-Length": pageTemplate.length});
+		res.end(pageTemplate);
 	});
 }
 
