@@ -167,7 +167,7 @@ module.exports.sendStatusPage = (_req, res) => {
 					let digitCount = 0;
 					if (hour.pages[0]) digitCount = hour.pages[0].length;
 					out += '<li>\n';
-					out += `<div class="caret">${h > thisHour ? '<span class="de-emphasized">' : ''}<b>${hour.start}${h % 12 ? ':00' : ''}</b> - ${h == thisHour ? '<span class="now">' : ''}<b>${hour.end}${(h + 1) % 12 ? ':00' : ''}</b>${ timeNameSequence.includes(hour.end) ? '' : `${(h + 1) < 12 ? "<em>am</em>" : "<em>pm</em>" }`}${h == thisHour ? '</span>' : ''}${h > thisHour ? '' : ` &#x2014; <strong>${hour.total}</strong> hits for <strong>${Object.keys(hour.pages).length}</strong> pages`}${h+1 < thisHour ? '</span>' : ''}</div>\n`;
+					out += `<div ${hour.total > 0 ? 'class="caret"' : ''}>${h > thisHour ? '<span class="de-emphasized">' : ''}<b>${hour.start}${h % 12 ? ':00' : ''}</b> - ${h == thisHour ? '<span class="now">' : ''}<b>${hour.end}${(h + 1) % 12 ? ':00' : ''}</b>${ timeNameSequence.includes(hour.end) ? '' : `${(h + 1) < 12 ? "<em>am</em>" : "<em>pm</em>" }`}${h == thisHour ? '</span>' : ''}${h > thisHour ? '' : ` &#x2014; <strong>${hour.total}</strong> hits for <strong>${Object.keys(hour.pages).length}</strong> pages`}${h+1 < thisHour ? '</span>' : ''}</div>\n`;
 					out += '<ol class="nested">\n';
 					// TODO: Add a "Total redirects" stat for http->https redirects
 					out += Object.keys(hour.pages).map(key => ({page: key, hits: hour.pages[key]})).sort((a,b) => b.hits - a.hits).map(({page, hits}) => `<li>${hits.toString().padStart(digitCount, ' ')}: ${page}</li>`).join('\n');
@@ -186,14 +186,23 @@ module.exports.sendStatusPage = (_req, res) => {
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<title>Today So Far</title>
 		<style>
+			body {
+				display: flex;
+				flex-wrap: wrap;
+				justify-content: center;
+				align-content: center;
+			}
+
 			.graph {
 				display: block;
 				text-align: center;
 				margin: 0 1rem;
+				font-family: monospace;
 			}
 
 			.status-stamp {
-				display: inline-block;
+				width: 350px;
+				height: 350px;
 				padding: 0 1rem;
 				border: 1px solid black;
 			}
@@ -256,23 +265,22 @@ module.exports.sendStatusPage = (_req, res) => {
 		</style>
 	</head>
 	<body>
-		<div class="status-stamp">
-			<h3>${(new Date(Date.now())).toLocaleDateString("en-US", {month: "short", day: "2-digit", year: "numeric", hour: "numeric", minute: "numeric"})}</h3>
-			<div>
-			<div>
-				Load Avg. ${os.loadavg().map(o => `<strong>${o}</strong>`).join(' &#x2014; ')} <em>(over 1 &#x2014 5 &#x2014 15 minutes)</em>
+			<div class="status-stamp">
+				<h3>${(new Date(Date.now())).toLocaleDateString("en-US", {month: "short", day: "2-digit", year: "numeric", hour: "numeric", minute: "numeric"})}</h3>
+				<div>
+				<div>
+					Load Avg. ${os.loadavg().map(o => `<strong>${o}</strong>`).join(' &#x2014; ')} <em>(over 1 &#x2014 5 &#x2014 15 minutes)</em>
+				</div>
+				<div>
+					Mem. <strong>${(os.freemem()/Math.pow(1024, 3)).toFixed(2)}</strong> / <strong>${(os.totalmem()/Math.pow(1024,3)).toFixed(2)}</strong> GiB <em>(free / total)</em>
+				</div>
+				<div>
+					Up for <strong>${Math.trunc(os.uptime() / 86400)}</strong> days
+				</div>
 			</div>
-			<div>
-				Mem. <strong>${(os.freemem()/Math.pow(1024, 3)).toFixed(2)}</strong> / <strong>${(os.totalmem()/Math.pow(1024,3)).toFixed(2)}</strong> GiB <em>(free / total)</em>
+			${getPageHitsGraph()}
 			</div>
-			<div>
-				Up for <strong>${Math.trunc(os.uptime() / 86400)}</strong> days
-			</div>
-		</div>
-		${getPageHitsGraph()}
-		</div>
-		<br>
-		${getPageHitsList()}
+			${getPageHitsList()}
 		<script>
 			var toggler = document.getElementsByClassName("caret");
 			var i;
