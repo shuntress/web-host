@@ -32,7 +32,7 @@ const controllerRoot = path.join(__dirname, '..', 'controllers');
  * @param {Node's request object} req  https://nodejs.org/api/http.html#http_class_http_clientrequest
  * @param {Node's response object} res https://nodejs.org/api/http.html#http_class_http_serverresponse
  */
-module.exports = ({req, res, socket, head} ) => {
+module.exports = (req, res, socket, head) => {
 	// parse url to determine controller/action
 	const parsedUrl = new url.URL(req.url, req.protocol + '://' + req.headers.host);
 	const parts = parsedUrl.pathname.split('/').filter(p => p);
@@ -141,3 +141,4 @@ const scan = (dir) => {
 };
 const controllers = {}; // All controllers found by scanning the controller directory. Key'd on path
 scan(controllerRoot);
+
