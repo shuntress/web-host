@@ -167,7 +167,7 @@ module.exports.sendStatusPage = (_req, res) => {
 					let digitCount = 0;
 					if (hour.pages[0]) digitCount = hour.pages[0].length;
 					out += '<li>\n';
-					out += `<div class="caret">${h > thisHour ? '<span class="de-emphasized">' : ''}<b>${hour.start}${h % 12 ? ':00' : ''}</b> - ${h == thisHour ? '<span class="now">' : ''}<b>${hour.end}${(h + 1) % 12 ? ':00' : ''}</b>${ timeNameSequence.includes(hour.end) ? '' : `${(h + 1) < 12 ? "<em>am</em>" : "<em>pm</em>" }`}${h == thisHour ? '</span>' : ''} &#x2014; <strong>${hour.total}</strong> hits for <strong>${Object.keys(hour.pages).length}</strong> pages${h+1 < thisHour ? '</span>' : ''}</div>\n`;
+					out += `<div class="caret">${h > thisHour ? '<span class="de-emphasized">' : ''}<b>${hour.start}${h % 12 ? ':00' : ''}</b> - ${h == thisHour ? '<span class="now">' : ''}<b>${hour.end}${(h + 1) % 12 ? ':00' : ''}</b>${ timeNameSequence.includes(hour.end) ? '' : `${(h + 1) < 12 ? "<em>am</em>" : "<em>pm</em>" }`}${h == thisHour ? '</span>' : ''}${h > thisHour ? '' : ` &#x2014; <strong>${hour.total}</strong> hits for <strong>${Object.keys(hour.pages).length}</strong> pages`}${h+1 < thisHour ? '</span>' : ''}</div>\n`;
 					out += '<ol class="nested">\n';
 					// TODO: Add a "Total redirects" stat for http->https redirects
 					out += Object.keys(hour.pages).map(key => ({page: key, hits: hour.pages[key]})).sort((a,b) => b.hits - a.hits).map(({page, hits}) => `<li>${hits.toString().padStart(digitCount, ' ')}: ${page}</li>`).join('\n');
