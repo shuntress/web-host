@@ -13,14 +13,16 @@ const path = require('path');
 
 const auth = require(path.join(__dirname, 'auth.js'));
 
+const wwwRoot = path.join(__dirname, '..', 'www');
+
 let config = null;
 try {
 	config = require(path.join(__dirname, '..', 'administration', 'config.json'));
 } catch (_e) {}
 
-module.exports = function(root, req, res) {
+module.exports = function(req, res) {
 	const webPath = path.normalize(decodeURIComponent(url.parse(req.url).pathname));
-	const absoluteSystemPath = path.join(root, webPath);
+	const absoluteSystemPath = path.join(wwwRoot, webPath);
 
 	fs.lstat(absoluteSystemPath, function(err, stats) {
 		if (err) {
@@ -29,11 +31,11 @@ module.exports = function(root, req, res) {
 		}
 
 		if (stats.isFile()) {
-			auth.authorize(req, res, root, path.dirname(absoluteSystemPath), () => {
+			auth.authorize(req, res, wwwRoot, path.dirname(absoluteSystemPath), () => {
 				loadFile(req, res, stats, absoluteSystemPath);
 			});
 		} else if (stats.isDirectory()) {
-			auth.authorize(req, res, root, absoluteSystemPath, () => {
+			auth.authorize(req, res, wwwRoot, absoluteSystemPath, () => {
 				loadDirectory(req, res, stats, webPath, absoluteSystemPath);
 			})
 		} else {
@@ -114,7 +116,6 @@ function loadDirectory(req, res, stats, webPath, absoluteSystemPath) {
 			// If an index file has been found, redirect to that instead of generating an index for this directory.
 			res.writeHead("302", {"Location": path.join(webPath, index)});
 			return res.end();
-			return;
 		}
 
 		// Otherwise, since no index was found, generate and index for this directory using this template.
@@ -145,8 +146,6 @@ function loadDirectory(req, res, stats, webPath, absoluteSystemPath) {
 }
 
 /**
- * This is fine.
- *
  * It would definitely be practical to just
  * include a module from npm that has all
  * MIME types but I am going to stick to

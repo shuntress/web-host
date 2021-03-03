@@ -86,17 +86,9 @@ log.info(log.tag('Startup'), `Open Account Requests: ${openAccountRequests}`);
  * @param {function} callback          Request handler that called here to check authentication.
  */
 module.exports.authenticate = function authorize(req, res, callback) {
-	// Check if the user is requesting the "new account" form
-	const parsedUrl = url.parse(req.url);
-	const urlparts = parsedUrl.pathname.split('/').filter(part => part != '');
-	if (urlparts.length == 1 && urlparts[0] == 'account') {
-		sendAccountForm(req, res);
-		return;
-	}
-
 	// Private resources (anything with "private" in its name or location)
 	// are only available to authenticated users.
-	if (req.url && !req.url.includes("private")) {
+	if (req.url && !new url.URL(req.url, req.protocol + '://' + req.headers.host).pathname.includes("private")) {
 		// If this request is not for a private resource, let it through.
 		callback();
 		return;
@@ -131,13 +123,7 @@ module.exports.authenticate = function authorize(req, res, callback) {
 	});
 };
 
-function sendLoginPrompt(res) {
-	res.setHeader('WWW-Authenticate', 'Basic realm="log in please"');
-	res.writeHead(401);
-	res.end("Access Denied");
-}
-
-function sendAccountForm(req, res) {
+module.exports.sendAccountForm = (req, res) => {
 	if (req.method == "GET") {
 		res.writeHead(200, { 'Content-Type': 'text/html' });
 		res.end(`
@@ -246,6 +232,12 @@ module.exports.authorize = function checkAuthorization(req, res, root, checkPath
 			log.warning(log.tags('Auth'), `unauthorized access attempt by ${name} to ${checkPath}`);
 		}
 	});
+}
+
+function sendLoginPrompt(res) {
+	res.setHeader('WWW-Authenticate', 'Basic realm="log in please"');
+	res.writeHead(401);
+	res.end("Access Denied");
 }
 
 function getPasswordHash(salt, password, callback) {

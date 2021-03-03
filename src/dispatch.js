@@ -13,45 +13,12 @@ const fs = require('fs');
 const path = require('path');
 const url = require('url');
 
+const auth = require(path.join(__dirname, 'auth.js'));
 const log = require(path.join(__dirname, 'log.js'));
+const index = require(path.join(__dirname, 'index.js'));
 
-/**
- * Scan root for controllers
- * Map controllers (key'd by path)
- * Each exported action will be a property
- * 
- * Return dispatcher function.
- * @param {string} controllerRoot Path to server-side code (web-core/controllers by default)
- * @param {string} wwwRoot        Path to static data (web-core/www by default)
- * @param {object} server         The node http(s) server endpoint intended to be wrapped in a WebSocket endpoint
- */
-module.exports.getDispatcher = (controllerRoot, wwwRoot, server) => {
-	const controllers = {};
-	scan(controllerRoot, controllers, wwwRoot, server);
-
-	// Setup websocket handler
-	server.on('upgrade', function upgrade(req, socket, head) {
-		const parts = url.parse(req.url).pathname.split(path.sep);
-		if (parts.length > 1) {
-			const controller = parts.pop();
-			const controllerPath = path.join(...parts);
-
-			const find = path.join(controllerRoot, controllerPath, controller + '.js');
-
-			let match = controllers[find];
-
-			if (match) {
-				match.webSocket.handleUpgrade(req, socket, head, function done(ws) {
-					match.webSocket.emit('connection', ws, req);
-				});
-			}
-		}
-	});
-
-	return (req, res) => {
-		return dispatch(req, res, controllers, controllerRoot);
-	};
-}
+const wwwRoot = path.join(__dirname, '..', 'www');
+const controllerRoot = path.join(__dirname, '..', 'controllers');
 
 /**
  * This functions checks the list of controllers for one that
@@ -62,19 +29,44 @@ module.exports.getDispatcher = (controllerRoot, wwwRoot, server) => {
  * to the action function as a plain object.
  * 
  * Return true if a controller action was called.
- * @param {*} req            Request object
- * @param {*} res            Response object
- * @param {*} controllers    All controller
- * @param {*} controllerRoot (by default) www-actions-public or www-actions-private
+ * @param {Node's request object} req  https://nodejs.org/api/http.html#http_class_http_clientrequest
+ * @param {Node's response object} res https://nodejs.org/api/http.html#http_class_http_serverresponse
  */
-const dispatch = (req, res, controllers, controllerRoot) => {
+module.exports = ({req, res, socket, head} ) => {
 	// parse url to determine controller/action
 	const parsedUrl = new url.URL(req.url, req.protocol + '://' + req.headers.host);
-	const parts = parsedUrl.pathname.split(path.sep);
-	let match = false;
+	const parts = parsedUrl.pathname.split('/').filter(p => p);
+
+	// Socket Upgrade Request
+	if (socket && head) {
+		const controller = parts.pop();
+		const controllerPath = path.join(...parts);
+
+		const find = path.join(controllerRoot, controllerPath, controller + '.js');
+
+		let match = controllers[find];
+
+		if (match && match.webSocket) {
+			match.webSocket.handleUpgrade(req, socket, head, (ws) => {
+				match.webSocket.emit('connection', ws, req);
+			});
+		}
+		return;
+	}
+
+	// "Special Case" route handlers. Splitting and re-joining the path cleanly trims the trailing slash (if it exists)
+	switch(parts.join('/')) {
+		case 'private/status':
+			// The log module handles parsing the daily log to generate a status page
+			log.sendStatusPage(req, res);
+			return;
+		case 'account':
+			// The auth module handles account creation
+			auth.sendAccountForm(req, res);
+			return;
+	}
 
 	if (parts.length > 1) {
-
 		const action = parts.pop();
 		const controller = parts.pop();
 		const controllerPath = path.join(...parts);
@@ -83,7 +75,7 @@ const dispatch = (req, res, controllers, controllerRoot) => {
 
 		/**
 		 * TODO: Fix this
-		 * If someone tries to run the init action just abort.
+		 * If someone tries to run the init action, just abort.
 		 * Maybe figure out a better fix for this that allows controllers
 		 * to have a real action called init and correctly hides the framework
 		 * init from access.
@@ -97,12 +89,14 @@ const dispatch = (req, res, controllers, controllerRoot) => {
 					const query = Array.from(parsedUrl.searchParams.keys()).reduce((a, k) => { return Object.assign({ [k]: parsedUrl.searchParams.get(k) }, a); }, {});
 					log.info(log.tags('Routing'), `dispatching request for ${action} on ${controller} in ${controllerPath} with ${JSON.stringify(query)}`);
 					controllers[find].controller[action](req, res, query);
-					match = true;
+					return;
 				}
 			}
 		}
 	}
-	return match;
+
+	// No controller matches route. Instead, index the directory under www/ specified by the URL path.
+	index(req, res);
 }
 
 /**
@@ -111,19 +105,13 @@ const dispatch = (req, res, controllers, controllerRoot) => {
  * have its `init` function called. The init function is passed
  * the wwwRoot so that a the controller may access static data
  * 
- * // TODO: Update this to be more selective (maybe ignore a 'data'
- * folder) to give controllers a place to put server-side-only data
- * 
- * @param {string} dir         Current scanning directory
- * @param {object} controllers All found controllers, key'd on path
- * @param {string} wwwRoot     Corresponding static data root (by default, www-public or www-private)
- * @param {object} server      The node http(s) server endpoint intended to be wrapped in a WebSocket endpoint
+ * @param {string} dir Current scan directory
  */
-const scan = (dir, controllers, wwwRoot, server) => {
+const scan = (dir) => {
 	// load dir 
 	const nodes = fs.readdirSync(dir);
 
-	// Check each file, if its a directory appaend to dir and pass to scan
+	// Check each file, if its a directory append to dir and pass to scan
 	nodes.forEach(node => {
 		const controllerPath = path.join(dir, node);
 		const stats = fs.lstatSync(controllerPath);
@@ -133,7 +121,7 @@ const scan = (dir, controllers, wwwRoot, server) => {
 			let controller = require(controllerPath);
 			controllers[controllerPath] = { controller };
 			if (controller.init) {
-				let config = controller.init(wwwRoot, server);
+				let config = controller.init(wwwRoot);
 				if (config && config.webSocket) {
 					controllers[controllerPath].webSocket = config.webSocket;
 				}
@@ -147,7 +135,9 @@ const scan = (dir, controllers, wwwRoot, server) => {
 			 * TODO: Hack fix to ignore node modules and app data.
 			 * Flesh this out... better... or something.
 			 */
-			scan(controllerPath, controllers, wwwRoot, server);
+			scan(controllerPath);
 		}
 	});
 };
+const controllers = {}; // All controllers found by scanning the controller directory. Key'd on path
+scan(controllerRoot);
