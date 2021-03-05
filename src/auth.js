@@ -31,7 +31,7 @@ const log = require(path.join(__dirname, 'log.js'));
 
 const pathToUserCredentials = path.join(__dirname, '..', 'administration', 'user_credentials.txt');
 const pathToUserAccountRequests = path.join(__dirname, '..', 'administration', 'account_creation_requests.txt');
-
+const invalid_names = {};
 
 /**
  * Setup handles loading user credentials from the disk in to memory to be
@@ -55,9 +55,9 @@ catch (err) {
 const authorized_credentials = users.split(os.EOL).filter(row => row.length > 3).map(row => {
 	if (row.length > 300) log.warning(log.tag('Auth'), `Abnormally long user record. Potentially malicious user input or mistakenly missing line break. Check ${pathToUserCredentials}`);
 	const parts = row.split(' ');
-	return { name: parts[0], salt: parts[1], pwHash: parts[2] };
+	return { name: parts[0], salt: parts[1], pwHash: parts[2], locked: Boolean(parts[3])};
 }).reduce((acc, user) => {
-	acc[user.name] = { salt: user.salt, pwHash: user.pwHash };
+	acc[user.name] = { salt: user.salt, pwHash: user.pwHash, locked: user.locked, loginAttempts: 0 };
 	return acc;
 }, {});
 
@@ -98,14 +98,24 @@ module.exports.authenticate = function authorize(req, res, callback) {
 	const parts = auth && auth.split(' ');
 	const credentials = parts && parts.length > 1 && Buffer.from(parts[1], 'base64').toString('ascii').split(':');
 
-	if (!credentials || authorized_credentials[credentials[0]] == null) {
+	if (!credentials) {
 		log.info(log.tag('Auth'), 'Unauthorized: credentials not provided');
 		sendLoginPrompt(res);
 		return;
 	}
+
+	if (authorized_credentials[credentials[0]] == null && invalid_names[credentials[0]] == null) {
+		invalid_names[credentials[0]] = {
+			salt: ' no salt ',
+			pwHash: ' no password hash ',
+			loginAttempts: 0,
+			locked: false,
+		};
+	}
+
 	const username = credentials && credentials[0];
 	const password = credentials && credentials[1];
-	const salt = authorized_credentials[username].salt;
+	const salt = authorized_credentials[username]?.salt ?? '';
 
 	getPasswordHash(salt, password, (err, pwHash) => {
 		if (err) {
@@ -114,10 +124,16 @@ module.exports.authenticate = function authorize(req, res, callback) {
 			res.end();
 			return;
 		}
-		if (authorized_credentials[username].pwHash.trim() == pwHash.toString('base64')) {
+		let user = authorized_credentials[username] ?? invalid_names[username];
+		if (user.pwHash.trim() == pwHash.toString('base64') && !user.locked) {
 			callback();
 		} else {
-			log.warning(log.tag('Auth'), `Unauthorized: Wrong Password. Username: ${username}`);
+			user.loginAttempts++;
+			log.warning(log.tag('Auth'), `Unauthorized: Wrong Password. Username: ${username} attempt #${user.loginAttempts}`);
+			if (user.loginAttempts > 3) {
+				log.warning(log.tag('Auth'), `Account Locked (${username}). Too many failed login attempts.`);
+				user.locked = true;
+			}
 			sendLoginPrompt(res);
 		}
 	});
