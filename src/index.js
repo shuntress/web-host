@@ -12,13 +12,9 @@ const url = require('url');
 const path = require('path');
 
 const auth = require(path.join(__dirname, 'auth.js'));
+const config = require(path.join(__dirname, 'config.js'));
 
-const wwwRoot = path.join(__dirname, '..', 'www');
-
-let config = null;
-try {
-	config = require(path.join(__dirname, '..', 'administration', 'config.json'));
-} catch (_e) {}
+const wwwRoot = config.wwwRoot;
 
 module.exports = function(req, res) {
 	const webPath = path.normalize(decodeURIComponent(url.parse(req.url).pathname));
@@ -110,7 +106,7 @@ function loadDirectory(req, res, stats, webPath, absoluteSystemPath) {
 		// from web-core/administration/config.json and is expected to be a simple
 		// key:value pair of domain:indexFile
 		// If this is not a domain root or if no index is configured, check for a file named "index"
-		const index = ((webPath === '/') && config?.indices[req.headers.host]) || files.find(file => file === "index.html");
+		const index = ((webPath === '/') && config.indices[req.headers.host]) || files.find(file => file === "index.html");
 
 		if (index) {
 			// If an index file has been found, redirect to that instead of generating an index for this directory.

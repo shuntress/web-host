@@ -12,8 +12,10 @@ const path = require('path');
 const os = require('os');
 const readline = require('readline');
 
-const pathToDailyLog = path.join(__dirname, '..', 'administration', 'dailies.log');
-let dailies = fs.createWriteStream(pathToDailyLog, {flags: 'a+'});
+const config = require(path.join(__dirname, 'config.js'));
+
+const dailyLogFile = config.dailyLogFile;
+let dailies = fs.createWriteStream(dailyLogFile, {flags: 'a+'});
 
 // HACK: Set a fake timestamp that can't be old enough to delete the dailies
 // while things log during initialization. This prevents an error caused by
@@ -26,7 +28,7 @@ let currentOldestTimestamp = Date.now();
 
 // Read just the first line of the current daily log.
 const rl = readline.createInterface({
-	input: fs.createReadStream(pathToDailyLog)
+	input: fs.createReadStream(dailyLogFile)
 }).on('line', oldestDailyEntry => {
 	rl.close();
 	rl.removeAllListeners();
@@ -64,7 +66,7 @@ function turnoverDaily(now) {
 	if (currentOldestTimestamp < todaysMidnight.getTime()) {
 		// Clear the log when oldest entry is from before the most recent midnight.
 		dailies.close();
-		dailies = fs.createWriteStream(pathToDailyLog, {flags: 'w'});
+		dailies = fs.createWriteStream(dailyLogFile, {flags: 'w'});
 		currentOldestTimestamp = now;
 		module.exports.info('Turnover dailies.')
 	}
@@ -87,7 +89,7 @@ module.exports.sendStatusPage = (_req, res) => {
 			total: 0,
 		};
 	readline.createInterface({
-		input: fs.createReadStream(pathToDailyLog)
+		input: fs.createReadStream(dailyLogFile)
 	}).on('line', line => {
 		let parts = line.split(' ');
 		const timestamp = Number(parts.splice(0,1)[0]);

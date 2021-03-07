@@ -16,9 +16,10 @@ const url = require('url');
 const auth = require(path.join(__dirname, 'auth.js'));
 const log = require(path.join(__dirname, 'log.js'));
 const index = require(path.join(__dirname, 'index.js'));
+const config = require(path.join(__dirname, 'config.js'));
 
-const wwwRoot = path.join(__dirname, '..', 'www');
-const controllerRoot = path.join(__dirname, '..', 'controllers');
+const wwwRoot = config.wwwRoot;
+const controllerRoot = config.controllerRoot;
 
 /**
  * This functions checks the list of controllers for one that
@@ -139,5 +140,6 @@ const scan = (dir) => {
 		}
 	});
 };
-const controllers = {}; // All controllers found by scanning the controller directory. Key'd on path
+const controllers = {}; // All modules found by scanning the controller directory. Key'd on path
 scan(controllerRoot);
+

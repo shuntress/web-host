@@ -27,10 +27,12 @@ const os = require('os');
 const { parse } = require('querystring');
 const path = require('path');
 const { randomBytes, pbkdf2 } = require('crypto');
-const log = require(path.join(__dirname, 'log.js'));
 
-const pathToUserCredentials = path.join(__dirname, '..', 'administration', 'user_credentials.txt');
-const pathToUserAccountRequests = path.join(__dirname, '..', 'administration', 'account_creation_requests.txt');
+const log = require(path.join(__dirname, 'log.js'));
+const config = require(path.join(__dirname, 'config.js'));
+
+const pathToUserCredentials = config.pathToUserCredentials;
+const pathToUserAccountRequests = config.pathToUserAccountRequests;
 
 
 /**

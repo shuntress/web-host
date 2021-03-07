@@ -23,6 +23,7 @@ const http = require('http');
 const auth = require(path.join(__dirname, 'auth.js'));
 const log = require(path.join(__dirname, 'log.js'));
 const dispatch = require(path.join(__dirname, 'dispatch.js'));
+const config = require(path.join(__dirname, 'config.js'));
 
 /**
  * SECRET Key and PUBLIC Certificate
@@ -35,17 +36,15 @@ const dispatch = require(path.join(__dirname, 'dispatch.js'));
  *
  * openssl req -newkey rsa:2048 -nodes -keyout administration/key.pem -x509 -days 365 -out administration/certificate.pem
  */
-const serverPrivateKeyPath = path.join(__dirname, '..', 'administration', 'key.pem');
-const serverCertificatePath = path.join(__dirname, '..', 'administration', 'certificate.pem');
 const httpsOptions = {
-	key: fs.readFileSync(serverPrivateKeyPath),
-	cert: fs.readFileSync(serverCertificatePath)
+	key: fs.readFileSync(config.serverPrivateKeyPath),
+	cert: fs.readFileSync(config.serverCertificatePath)
 };
 
 /**
  * This is the secure entrypoint
  */
-const httpsPort = 443;
+const httpsPort = config.httpsPort;
 const httpsServer = https.createServer(httpsOptions, function (req, res) {
 	log.info(log.tags('Request', httpsPort, req.method), JSON.stringify({from: req.socket.remoteAddress, for: `${req.headers.host}${req.url}`}));
 
@@ -65,7 +64,7 @@ httpsServer.listen(httpsPort);
  * Non-secure http endpoint.
  * This just redirects to the secure endpoint.
  */
-const httpPort = 80;
+const httpPort = config.httpPort;
 const httpServer = http.createServer(function (req, res) {
 	let redirectLocation = "https://" + (req.headers.host ?? '') + (req.url ?? '');
 	log.info(log.tags('Request', httpPort, req.method, 'Redirect'), JSON.stringify({from: req.socket.remoteAddress, for: `${req.headers.host}${req.url}`, redirectTo: redirectLocation}));
