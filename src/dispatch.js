@@ -86,10 +86,10 @@ module.exports = ({req, res, socket, head} ) => {
 		// check for controller in controller collection
 		if (action && controller && controllerPath) {
 			if (controllers[find]) {
-				if (controllers[find].controller[action]) {
+				if (controllers[find][action]) {
 					const query = Array.from(parsedUrl.searchParams.keys()).reduce((a, k) => { return Object.assign({ [k]: parsedUrl.searchParams.get(k) }, a); }, {});
 					log.info(log.tags('Routing'), `dispatching request for ${action} on ${controller} in ${controllerPath} with ${JSON.stringify(query)}`);
-					controllers[find].controller[action](req, res, query);
+					controllers[find][action](req, res, query);
 					return;
 				}
 			}
@@ -120,12 +120,9 @@ const scan = (dir) => {
 			log.info(log.tags('Startup'), `found controller ${controllerPath}`);
 			// If its a file append to controllers
 			let controller = require(controllerPath);
-			controllers[controllerPath] = { controller };
+			controllers[controllerPath] = controller;
 			if (controller.init) {
-				let config = controller.init(wwwRoot);
-				if (config && config.webSocket) {
-					controllers[controllerPath].webSocket = config.webSocket;
-				}
+				controller.init(wwwRoot);
 			}
 		} else if (
 			stats.isDirectory()
