@@ -54,10 +54,10 @@ const httpsServer = https.createServer(httpsOptions, function (req, res) {
 	 * present otherwise, it returns a 401 response.
 	 */
 	auth.authenticate(req, res, () => {
-		dispatch({req, res});
+		dispatch(req, res);
 	});
 });
-httpsServer.on('upgrade', dispatch);
+httpsServer.on('upgrade', (req, socket, head) => dispatch(req, null, socket, head));
 httpsServer.listen(httpsPort);
 
 /**
