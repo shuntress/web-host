@@ -34,6 +34,7 @@ const config = require(path.join(__dirname, 'config.js'));
 const pathToUserCredentials = config.pathToUserCredentials;
 const pathToUserAccountRequests = config.pathToUserAccountRequests;
 const invalid_names = {};
+const totalUsernameLimit = config.totalUsernameLimit;
 
 /**
  * Setup handles loading user credentials from the disk in to memory to be
@@ -94,52 +95,52 @@ module.exports.authenticate = function authorize(req, res, callback) {
 		// If this request is not for a private resource, let it through.
 		callback();
 		return;
+	} else {
+		validateCredentials(req, res, callback);
 	}
-
-	const auth = req.headers.authorization;
-	const parts = auth && auth.split(' ');
-	const credentials = parts && parts.length > 1 && Buffer.from(parts[1], 'base64').toString('ascii').split(':');
-
-	if (!credentials) {
-		log.info(log.tag('Auth'), 'Unauthorized: credentials not provided');
-		sendLoginPrompt(res);
-		return;
-	}
-
-	if (authorized_credentials[credentials[0]] == null && invalid_names[credentials[0]] == null) {
-		invalid_names[credentials[0]] = {
-			salt: ' no salt ',
-			pwHash: ' no password hash ',
-			loginAttempts: 0,
-			locked: false,
-		};
-	}
-
-	const username = credentials && credentials[0];
-	const password = credentials && credentials[1];
-	const salt = authorized_credentials[username]?.salt ?? '';
-
-	getPasswordHash(salt, password, (err, pwHash) => {
-		if (err) {
-			log.error(log.tag('Auth'), err);
-			res.writeHead(500);
-			res.end();
-			return;
-		}
-		let user = authorized_credentials[username] ?? invalid_names[username];
-		if (user.pwHash.trim() == pwHash.toString('base64') && !user.locked) {
-			callback();
-		} else {
-			user.loginAttempts++;
-			log.warning(log.tag('Auth'), `Unauthorized: Wrong Password. Username: ${username} attempt #${user.loginAttempts}`);
-			if (user.loginAttempts > 3) {
-				log.warning(log.tag('Auth'), `Account Locked (${username}). Too many failed login attempts.`);
-				user.locked = true;
-			}
-			sendLoginPrompt(res);
-		}
-	});
 };
+
+/**
+ * Check for authorization file. Scan up the tree from the requested resource to the root.
+ * In the first auth file found, check if the current user is on the list of authorized users
+ * for the requested resource. If not auth file is found, default to open.
+ *
+ * @param {Node's request object} req  https://nodejs.org/api/http.html#http_class_http_clientrequest
+ * @param {Node's response object} res https://nodejs.org/api/http.html#http_class_http_serverresponse
+ * @param {string} root                The absolute path to the site's base folder.
+ * @param {string} checkPath           An absolute path somewhere between the root and the requested resource.
+ * @param {function} callback          Request handler that called here to check authorization.
+ */
+ module.exports.authorize = function checkAuthorization(req, res, root, checkPath, callback) {
+	fs.readFile(path.join(checkPath, ".authorized_users"), (err, data) => {
+		if (err) {
+			if (err.code == 'ENOENT') {
+				// Recurse up the tree looking for the closest .authorized_users file
+				if (path.relative(checkPath, root) === path.basename(root)) {
+					// At the root, no auth file found. Default to open.
+					callback();
+				} else {
+					checkAuthorization(req, res, root, path.dirname(checkPath), callback);
+				}
+				return;
+			}
+			log.error(log.tags('Auth'), `Authorization Failure: ${err}`);
+		}
+
+		// Make sure the user is logged in.
+		validateCredentials(req, res, () => {
+			// Check whether the logged in user is on the list of authorized users for this resource.
+			const name = getUserName(req);
+			if (data.toString().split(os.EOL).includes(name)) {
+				callback();
+			} else {
+				res.writeHead(403, { "Content-Type": "text/plain" });
+				res.end("Access Forbidden");
+				log.warning(log.tags('Auth'), `unauthorized access attempt by ${name} to ${checkPath}`);
+			}
+		});
+	});
+}
 
 module.exports.sendAccountForm = (req, res) => {
 	if (req.method == "GET") {
@@ -207,47 +208,70 @@ module.exports.sendAccountForm = (req, res) => {
 }
 
 /**
- * Check for authorization file. Scan up the tree from the requested resource to the root.
- * In the first auth file found, check if the current user is on the list of authorized users
- * for the requested resource. If not auth file is found, default to open.
+ * Checks the username and password on the request headers.
+ * If the hash of the provided password matches the hash on file for that
+ * username, the callback is executed. Otherwise, a "Permission denied" request
+ * for login response is sent.
  *
- * @param {Node's request object} req  https://nodejs.org/api/http.html#http_class_http_clientrequest
- * @param {Node's response object} res https://nodejs.org/api/http.html#http_class_http_serverresponse
- * @param {string} root                The absolute path to the site's base folder.
- * @param {string} checkPath           An absolute path somewhere between the root and the requested resource.
- * @param {function} callback          Request handler that called here to check authorization.
+ * @param {node's request object} req  https://nodejs.org/api/http.html#http_class_http_clientrequest
+ * @param {node's response object} res https://nodejs.org/api/http.html#http_class_http_serverresponse
+ * @param {function} callback
  */
-module.exports.authorize = function checkAuthorization(req, res, root, checkPath, callback) {
-	fs.readFile(path.join(checkPath, ".authorized_users"), (err, data) => {
-		if (err) {
-			if (err.code == 'ENOENT') {
-				// Recurse up the tree looking for the closest .authorized_users file
-				if (path.relative(checkPath, root) === path.basename(root)) {
-					// At the root, default to open.
-					callback();
-				} else {
-					checkAuthorization(req, res, root, path.dirname(checkPath), callback);
-				}
-				return;
-			}
-			log.error(log.tags('Auth'), `Authorization Failure: ${err}`);
-		}
+function validateCredentials(req, res, callback) {
+	const auth = req.headers.authorization;
+	const parts = auth && auth.split(' ');
+	const credentials = parts && parts.length > 1 && Buffer.from(parts[1], 'base64').toString('ascii').split(':');
 
-		const name = getUserName(req);
+	if (!credentials) {
+		log.info(log.tag('Auth'), 'Unauthorized: credentials not provided');
+		sendLoginPrompt(res);
+		return;
+	}
 
-		// If the user is not authenticated, prompt for them to log in
-		if (!name) {
-			sendLoginPrompt(res);
+	if (authorized_credentials[credentials[0]] == null && invalid_names[credentials[0]] == null) {
+		// If the provided credentials are not on the list of authorized users or
+		// the list of invalid names, then add them to the list of invalid names.
+		// This allows and invalid account login attempt to be treated (and
+		// locked) the same as a regular login attempt with the same logic.
+
+		if (Object.keys(authorized_credentials).length + Object.keys(invalid_names).length > totalUsernameLimit) {
+			// This check just limits the number of tracked invalid account names.
+			log.warning(log.tags('Auth'), 'Too many invalid account login attempts');
+			res.writeHead(500);
+			stallSend("Internal Error", res);
 			return;
 		}
 
-		// Check whether the logged in user is on the list of authorized users for this resource.
-		if (data.toString().split(os.EOL).includes(name)) {
+		invalid_names[credentials[0]] = {
+			salt: ' no salt ',
+			pwHash: ' no password hash ',
+			loginAttempts: 0,
+			locked: false,
+		};
+	}
+
+	const username = credentials && credentials[0];
+	const password = credentials && credentials[1];
+	const salt = authorized_credentials[username]?.salt ?? '';
+
+	getPasswordHash(salt, password, (err, pwHash) => {
+		if (err) {
+			log.error(log.tag('Auth'), err);
+			res.writeHead(500);
+			res.end();
+			return;
+		}
+		let user = authorized_credentials[username] ?? invalid_names[username];
+		if (user.pwHash.trim() == pwHash.toString('base64') && !user.locked) {
 			callback();
 		} else {
-			res.writeHead(403, { "Content-Type": "text/plain" });
-			res.end("Access Forbidden");
-			log.warning(log.tags('Auth'), `unauthorized access attempt by ${name} to ${checkPath}`);
+			user.loginAttempts++;
+			log.warning(log.tag('Auth'), `Unauthorized: Wrong Password. Username: ${username} attempt #${user.loginAttempts}`);
+			if (user.loginAttempts > 3) {
+				log.warning(log.tag('Auth'), `Account Locked (${username}). Too many failed login attempts.`);
+				user.locked = true;
+			}
+			sendLoginPrompt(res);
 		}
 	});
 }
@@ -265,7 +289,7 @@ function getPasswordHash(salt, password, callback) {
 /**
  * Get current user name from auth headers.
  *
- * @param {HttpRequest} req Node's request object
+ * @param {Node's request object} req https://nodejs.org/api/http.html#http_class_http_clientrequest
  *
  * @return {string?} User name
  */
@@ -276,3 +300,18 @@ function getUserName(req) {
 	return credentials && credentials[0];
 }
 
+/**
+ * Sends the given message one character at a time with a 1-5 second delay
+ * between each character.
+ *
+ * @param {string} message
+ * @param {Node's response object} res https://nodejs.org/api/http.html#http_class_http_serverresponse
+ */
+function stallSend(message, res) {
+	if (message.length > 0) {
+		res.write(message[0]);
+		setTimeout(() => stallSend(message.substring(1), res), Math.floor(Math.random() * (5000)) + 1000)
+	} else {
+		res.end();
+	}
+}

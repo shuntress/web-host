@@ -25,3 +25,4 @@ module.exports.controllerRoot = config?.controllerRoot ?? path.join(__dirname, '
 module.exports.pathToUserCredentials = config?.pathToUserCredentials ?? path.join(__dirname, '..', 'administration', 'user_credentials.txt');
 module.exports.pathToUserAccountRequests = config?.pathToUserAccountRequests ?? path.join(__dirname, '..', 'administration', 'account_creation_requests.txt');
 
+module.exports.totalUsernameLimit = config?.totalUsernameLimit ?? 200;
