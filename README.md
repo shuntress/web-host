@@ -21,7 +21,7 @@ Small-scale web publishing should be simple.
 
 A CS degree should not feel like a requirement for self-hosting your resume, blog, or photos.
 
-## Quick Start
+# Quick Start
 **Install Node**: [https://nodejs.org/](https://nodejs.org/)
 
 **Download and extract the source code**: [https://github.com/shuntress/web-core/archive/main.zip](https://github.com/shuntress/web-core/archive/main.zip)  
@@ -36,6 +36,8 @@ A CS degree should not feel like a requirement for self-hosting your resume, blo
 
 **Add some test content**: `echo "test file, please ignore" > www/testfile.txt`  
 [http://localhost/testfile.txt](http://localhost/testfile.txt)
+
+---
 
 ## Slightly Slower Start
 
