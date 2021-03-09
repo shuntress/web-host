@@ -48,7 +48,7 @@ This builds on the quick start by adding a certificate to enable HTTPS and user 
 *If this step is confusing, read up on [TLS](https://en.m.wikipedia.org/wiki/Transport_Layer_Security) and [Public Key Cryptography](https://en.m.wikipedia.org/wiki/Public-key_cryptography).*  
 *Admittedly, it does feel like a CS degree would help with this part.*
 
-**Enable HTTPS**: Create `administration/config.json` with the content  
+**Enable HTTPS**: Create `administration/config.json` with the following content: 
 ```
 {
    "useHttps": true
