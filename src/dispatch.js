@@ -96,7 +96,7 @@ module.exports = (req, res, socket, head) => {
 		}
 	}
 
-	// No controller matches route. Instead, index the directory under www/ specified by the URL path.
+	// No controller matches route. Instead, index the directory under content/ specified by the URL path.
 	index(req, res);
 }
 

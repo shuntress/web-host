@@ -34,7 +34,7 @@ module.exports.dailyLogFile =  path.join(__dirname, '..', 'administration', 'dai
 module.exports.indices = config?.indices ?? {};
 
 // Path to the statically hosted directory
-module.exports.wwwRoot = config?.wwwRoot ?? path.join(__dirname, '..', 'www');
+module.exports.wwwRoot = config?.wwwRoot ?? path.join(__dirname, '..', 'content');
 
 // Path to custom server-side javascript modules
 module.exports.controllerRoot = config?.controllerRoot ?? path.join(__dirname, '..', 'controllers');

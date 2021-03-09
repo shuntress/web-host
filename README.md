@@ -34,7 +34,7 @@ A CS degree should not feel like a requirement for self-hosting your resume, blo
 
 **Check the status page**: [http://localhost/status](http://localhost/private/status)
 
-**Add some test content**: `echo "test file, please ignore" > www/testfile.txt`  
+**Add some test content**: `echo "test file, please ignore" > content/testfile.txt`  
 [http://localhost/testfile.txt](http://localhost/testfile.txt)
 
 ---
@@ -57,8 +57,8 @@ This builds on the quick start by adding a certificate to enable HTTPS and user 
 ```
 
 **Add a some test private content**
- - `mkdir www/private`
- - `echo "private test file" > www/private/testfile.txt`
+ - `mkdir content/private`
+ - `echo "private test file" > content/private/testfile.txt`
 
 [https://localhost/private/testfile.txt](https://localhost/private/testfile.txt)  
 *This should fail because you have no login.*

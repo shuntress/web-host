@@ -6,8 +6,8 @@
 
 # Ignore everything in the site content directories.
 # Those directories (the actual directories, not the list here in this file) are where you should put your files.
+content/*
 controllers/*
-www/*
 
 # Ignore site-specific operational data
 administration/user_credentials.txt
@@ -16,6 +16,6 @@ administration/config.json
 administration/dailies.log
 
 # Exempt the example files from the wild-card ignore.
+!content/web-core-about.html
 !controllers/web-core-example.js
-!www/web-core-about.html
 
