@@ -127,6 +127,13 @@ module.exports.authenticate = function authorize(req, res, callback) {
 			log.error(log.tags('Auth'), `Authorization Failure: ${err}`);
 		}
 
+		if (!config.useHttps) {
+			log.error(log.tags('Auth', 'Abort'), `Authorization configured without HTTPS. HTTPS is required for secure password transfer. Please configure HTTPS certificates and enable HTTPS in administration/config.json`);
+			res.writeHead(500);
+			res.end("Internal Error");
+			return;
+		}
+
 		// Make sure the user is logged in.
 		validateCredentials(req, res, () => {
 			// Check whether the logged in user is on the list of authorized users for this resource.

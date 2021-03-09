@@ -43,7 +43,7 @@ then
 fi
 echo "✓"
 
-# Allow the node executable to bind port 80 and 443 without running as root
+# Allow the node executable to bind ports 80 and 443 without running as root
 printf "Node port access capability..."
 setcap CAP_NET_BIND_SERVICE=+ep $(type -p node)
 echo "✓"

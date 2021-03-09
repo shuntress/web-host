@@ -53,7 +53,7 @@ function loadFile(req, res, stats, absoluteSystemPath) {
 
 	// Basis for content length calculation
 	let rangeStart=0;
-	let rangeEnd = stats.size - 1;
+	let rangeEnd = Math.max(0, stats.size - 1);
 
 	// "Resume Download" partial file
 	let isPartialRequest = (mimeType == 'audio/mpeg' || mimeType == 'audio/flac') && req.headers.range && req.headers.range.includes('=') && req.headers.range.includes('-');
@@ -79,7 +79,7 @@ function loadFile(req, res, stats, absoluteSystemPath) {
 	// Set response headers
 	const responseHeader = {
 		"Content-Type": mimeType,
-		"Content-Length": (Number(rangeEnd) + 1) - Number(rangeStart)
+		"Content-Length": Number(rangeEnd) === Number(rangeStart) ? 0 : (Number(rangeEnd) + 1) - Number(rangeStart)
 	};
 	if (isPartialRequest) {
 		responseHeader["Accept-Ranges"] = "bytes";
@@ -123,11 +123,11 @@ function loadDirectory(req, res, stats, webPath, absoluteSystemPath) {
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<link rel="stylesheet" href="/style.css">
 		<link rel="stylesheet" href="/layout.css">
-		<title>Index of ${webPath}</title>
+		<title>Index of ${webPath.split(path.sep).join('/')}</title>
 	</head>
 	<body>
 		<div class="content">
-			<h2>${webPath}</h2>
+			<h2>${webPath.split(path.sep).join('/')}</h2>
 			<ul>
 				${parentWebPath ? `<li><a href="${parentWebPath}">..</a></li>`:''}
 				${files.map(file =>`<li><a href="${path.join(webPath, encodeURIComponent(file))}">${file}</a></li>`).join('\n\t')}
