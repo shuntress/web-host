@@ -49,12 +49,12 @@ This builds on the quick start by adding a certificate to enable HTTPS and user 
 *Admittedly, it does feel like a CS degree would help with this part.*
 
 **Enable HTTPS**: Create `administration/config.json` with the content  
-*This also automatically redirects all HTTP traffic.*
 ```
 {
    "useHttps": true
 }
 ```
+*This also automatically redirects all HTTP traffic.*
 
 **Add a some test private content**
  - `mkdir content/private`
