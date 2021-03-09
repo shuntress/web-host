@@ -25,7 +25,7 @@ A CS degree should not feel like a requirement for self-hosting your resume, blo
 **Install Node**: [https://nodejs.org/](https://nodejs.org/)
 
 **Download and extract the source code**: [https://github.com/shuntress/web-core/archive/main.zip](https://github.com/shuntress/web-core/archive/main.zip)  
-*(alternately, you can use [Git](https://git-scm.com/downloads) to clone the repository: `git clone https://github.com/shuntress/web-core.git`)*  
+*(alternatively, you can use [Git](https://git-scm.com/downloads) to clone the repository: `git clone https://github.com/shuntress/web-core.git`)*  
 
 **Navigate to your install location**: `cd {path/to/web-core-main/on/your/system}`  
 *(the folder will be named `web-core-main` if you downloaded the archive zip file. It will be named `web-core` if you cloned the repository without changing its name)*
