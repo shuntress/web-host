@@ -80,13 +80,13 @@ Any URL with `private` in the path will require the user to log in.
 Authentication may be controlled per-directory by adding a newline-separated list of user names in a file called `.authorized_users`.
 
 When any static resource is requested, the index module will recurse up the tree towards the root looking for an `.authorized_users` file.  
-If the user's name is on the list of the first `.authorized_users` found, the request will be **accepted**.  
-If the first `.authorized_users` does not contain the user's name, the request will be **rejected**.  
-If no `.authorized_users` file is found, the request will be **accepted**.
+If no `.authorized_users` file is found, the request will be **accepted**.  
+If the first `.authorized_users` contains the user's name, the request will be **accepted**.  
+If the first `.authorized_users` does not contain the user's name, the request will be **rejected**.
 
 If a list of authorized users exists for a resource that does not have `private` in the path, the user will be prompted to login because a name is required for authorization.
 
 ## Configuration Options
 Config defaults are in [src/config.js](https://github.com/shuntress/web-core/blob/main/src/config.js).
 
-Defaults may be overridden by adding the corresponding property to `administration/config.json`
+Defaults may be overridden by setting the corresponding property in `administration/config.json`
