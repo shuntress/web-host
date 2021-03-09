@@ -57,7 +57,7 @@ module.exports = (req, res, socket, head) => {
 
 	// "Special Case" route handlers. Splitting and re-joining the path cleanly trims the trailing slash (if it exists)
 	switch(parts.join('/')) {
-		case 'private/status':
+		case config.useHttps ? 'private/status' : 'status':
 			// The log module handles parsing the daily log to generate a status page
 			log.sendStatusPage(req, res);
 			return;
