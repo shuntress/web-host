@@ -1,11 +1,15 @@
-# confirm git install
-printf "git"
-if ! type -P git > /dev/null
+# Navigate to the project root from the script's directory
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"/../..
+cd $DIR
+
+if [ ! $(basename "$PWD") = web-core ] && [ ! $(basename "$PWD") = web-core-main ]
 then
-	printf "..."
-	apt-get install git
+	echo "[ERROR]"
+	echo "This script is not meant to be run on it's own."
+	echo "Download and extract the project then run the setup from there."
+	echo "https://github.com/shuntress/web-core/archive/main.zip"
+	exit 1
 fi
-echo "✓"
 
 # confirm node install
 printf "node"
@@ -15,23 +19,6 @@ printf "..."
 	apt-get install nodejs
 fi
 echo "✓"
-
-# If the current directory is not web-core, check if it exists in the current directory.
-# This will skip the web-core download if you already cloned it and are running setup.sh from the repository.
-printf "web-core"
-if [ ! $(basename "$PWD") = web-core ]
-then
-	# If the current directory does not contain web-core, download it.
-	# This handles running setup.sh directly from the web
-	if [ ! -d web-core ]
-	then
-	printf "..."
-		git clone https://github.com/shuntress/web-core.git
-	fi
-	echo "✓"
-
-	cd web-core
-fi
 
 # Generate certificates
 # These will work for security purposes but cause a warning in the browser due to being untrusted.

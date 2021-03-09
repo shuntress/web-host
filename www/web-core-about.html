@@ -20,7 +20,7 @@
 		}
 
 		pre {
-			overflow: scroll;
+			overflow: auto;
 		}
 
 		p {
@@ -38,125 +38,15 @@
 
 <body>
 	<h1>
-		Web Core
+		Hello Web
 	</h1>
-	<ul>
-		<li>
-			Simple
-		</li>
-		<li>
-			<a href="https://github.com/shuntress/web-core" title="Go To Code">Open</a>
-		</li>
-		<li>
-			No dependencies (<a href="https://nodejs.org/en/">one dependency</a>)
-		</li>
-	</ul>
 
-	<h2>About</h2>
-	<p>
-This is my take on a minimalist web host with code that
-can be fully reviewed in an hour and installed/run from
-source directly.
-
-This small web host uses only node's built-ins to handle:
- - static content (filesystem index)
- - dynamic content (server-side javascript)
- - secure authentication ([HTTP authentication](https://tools.ietf.org/html/rfc7617), TLS/SSL, pbkdf2)
- - simple authorization (optional per-directory user list)
-	</p>
-
-	<h2>
-		Setup
-	</h2>
-
-	<p>
-		Pick a folder to contain your website.
-
-		Then, if you trust me, just super-user do
-		<a href="https://github.com/shuntress/web-core/blob/master/setup.sh">setup.sh</a> in that folder.
-
-		Blindly sudo-ing random scripts from the
-		internet is obviously not a best practice.
-		Please take a moment to read the
-		<a href="https://github.com/shuntress/web-core/blob/master/setup.sh">setup script</a>
-		before you run it with elevated
-		permissions or follow along and type it out for
-		yourself.
-	</p>
-	<p class="note">
-		These setup instructions are for *nix systems (Raspbian). If you can
-		translate the setup to match your install environment,
-		all of the web-core javascript should be system-agnostic.
-	</p>
 	<ol>
 		<li>
-			<p>
-				Install git and node
-			<pre><kbd>apt-get install git</kbd></pre>
-			<pre><kbd>apt-get install nodejs</kbd></pre>
-			</p>
-		</li>
-		<li>
-			<p>
-				Clone web-core
-			<pre><kbd>git clone https://github.com/shuntress/web-core.git</kbd></pre>
-			</p>
-		</li>
-		<li>
-			<p>
-				Change to the web-core directory
-			<pre><kbd>cd web-core</kbd></pre>
-			</p>
-		</li>
-		<li>
-			<p>
-				Generate the server key/certificate <span class="note">(This prompts for a few user inputs)</span>
-			<pre><kbd>openssl req -newkey rsa:2048 -nodes -keyout administration/key.pem -x509 -days 365 -out administration/certificate.pem</kbd></pre>
-			</p>
-		</li>
-
-		<li>
-			<p>
-				Give node permission to bind to ports
-				80 and 443 without running as root
-			<pre><kbd>sudo setcap CAP_NET_BIND_SERVICE=+ep $(type -p node)</kbd></pre>
-			</p>
-		</li>
-		<li>
-			<p>
-				Configure node to run as a service
-			<p class="note">
-				(Skip this step and just run `node site.js` if you want.
-				But skipping it will make longer-term site
-				management significantly more annoying)</p>
-			<pre><kbd>
-nodepath=$(type -P node)
-installpath=$(pwd)
-unitFile = /etc/systemd/system/nodeserver.service
-touch $unitFile
-echo "[Unit]" >> $unitFile
-echo "Description=Node.js Server" >> $unitFile
-echo "" >> $unitFile
-echo "[Service]" >> $unitFile
-printf "ExecStart=%s %s/src/site.js" $nodepath $installpath >> $unitFile
-echo "Restart=always" >> $unitFile
-echo "# Restart service after 10 seconds if node service crashes" >> $unitFile
-echo " RestartSec=10" >> $unitFile
-echo " # Output to syslog" >> $unitFile
-echo "StandardOutput=syslog" >> $unitFile
-echo "StandardError=syslog" >> $unitFile
-echo "SyslogIdentifier=nodeserver" >> $unitFile
-echo "" >> $unitFile
-echo "[Install]" >> $unitFile
-echo "WantedBy=multi-user.target" >> $unitFile
-
-logConf = /etc/rsyslog.d/nodeserver.conf
-touch $logConf
-echo "if \$programname == 'nodeserver' then /var/log/nodeserver.log" > $longConf
-echo "if \$programname == 'nodeserver' then ~" >> $logConf
-</kbd></pre>
-
-			</p>
+			Check out the <a
+			href="https://github.com/shuntress/web-core/tree/main/administration/setup">setup
+			scripts</a> (if you haven't already) and configure your system to run this as a
+			persistent service.
 		</li>
 		<li>
 			<p>
@@ -170,22 +60,14 @@ echo "if \$programname == 'nodeserver' then ~" >> $logConf
 		</li>
 		<li>
 			<p>
+				Setup login requirements for any content you don't want to share publicly.
+			</p>
+			<p>
 				Anything with <strong>private</strong> in the URL will require a login.
 			</p>
 			<p>
-				Any directory containing a file named <strong>.authorized_users</strong> will require the logged in user's name to be included in the (newline-separated) list of users allowed to view anything in that directory.
+				Any directory containing a file named <strong>.authorized_users</strong> will require the logged in user's name to be included in the (newline-separated) list of users allowed to view anything in that directory (recursive).
 			</p>
-		</li>
-		<li>
-			Check if things are working with:
-			<pre><kbd>systemctl status nodeserver</kbd></pre>
-			<p class="note"> systemctl can show
-				service status if you did not skip
-				step 8. If you did skip step 8, then the terminal where you ran `node src/site.js` should display the log
-				output.</p>
-			and navigate a browser to
-			<pre><kbd>http://[yourip]/</kbd></pre>
-			<pre><kbd>https://[yourip]/</kbd></pre>
 		</li>
 
 		<li>
@@ -202,9 +84,16 @@ echo "if \$programname == 'nodeserver' then ~" >> $logConf
 			<pre><kbd>administration/user_credentials.txt</kbd></pre> (create this file if it does not exist)
 			</p>
 			<p>
-				restart the server
-			<pre><kbd>systemctl restart nodeserver</kbd></pre>
+				restart the server to load new user accounts.
 			</p>
+		</li>
+
+		<li>
+			Check if things are working with:
+			<pre><kbd>http://[yourip]/status</kbd></pre>
+			or
+			<pre><kbd>https://[yourip]/private/status</kbd></pre>
+			if you have enabled HTTPS.
 		</li>
 	</ol>
 
@@ -242,9 +131,7 @@ echo "if \$programname == 'nodeserver' then ~" >> $logConf
 		</li>
 
 		<li>
-			Logging is mostly handled by systemd and logs can be viewed either directly with
-			<pre><kbd>tail /var/log/nodeserver.log</kbd></pre> or
-			<pre><kbd>journalctl -u nodeserver</kbd></pre>
+			Long-term logging will depend on the system-specific installation but logs are duplicated to a rolling daily log file in the administration directory.
 		</li>
 	</ol>
 	</p>
