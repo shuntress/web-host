@@ -81,8 +81,8 @@ Authentication may be controlled per-directory by adding a newline-separated lis
 
 When any static resource is requested, the index module will recurse up the tree towards the root looking for an `.authorized_users` file.  
 If no `.authorized_users` file is found, the request will be **accepted**.  
-If the first `.authorized_users` contains the user's name, the request will be **accepted**.  
-If the first `.authorized_users` does not contain the user's name, the request will be **rejected**.
+If the first `.authorized_users` lists the user's name, the request will be **accepted**.  
+If the first `.authorized_users` does not list the user's name, the request will be **rejected**.
 
 If a list of authorized users exists for a resource that does not have `private` in the path, the user will be prompted to login because a name is required for authorization.
 
