@@ -149,7 +149,16 @@ module.exports.authenticate = function authorize(req, res, callback) {
 	});
 }
 
+/**
+ * Handle sending/receiving the new account request form.
+ */
 module.exports.sendAccountForm = (req, res) => {
+	if (!config.useHttps) {
+		res.writeHead(400);
+		res.end("Account creation requires HTTPS connection.");
+		return;
+	}
+
 	if (req.method == "GET") {
 		res.writeHead(200, { 'Content-Type': 'text/html' });
 		res.end(`

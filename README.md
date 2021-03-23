@@ -77,7 +77,7 @@ When HTTPS is enabled, resources may be setup to require authorization.
 
 Any URL with `private` in the path will require the user to log in.
 
-Authentication may be controlled per-directory by adding a newline-separated list of user names in a file called `.authorized_users`.
+Authorization may be controlled per-directory by adding a newline-separated list of user names in a file called `.authorized_users`.
 
 When any static resource is requested, the index module will recurse up the tree towards the root looking for an `.authorized_users` file.  
 If no `.authorized_users` file is found, the request will be **accepted**.  
