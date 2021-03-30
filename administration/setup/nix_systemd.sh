@@ -2,12 +2,12 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"/../..
 cd $DIR
 
-if [ ! $(basename "$PWD") = web-core ] && [ ! $(basename "$PWD") = web-core-main ]
+if [ ! $(basename "$PWD") = web-host] && [ ! $(basename "$PWD") = web-host-main ]
 then
 	echo "[ERROR]"
 	echo "This script is not meant to be run on it's own."
 	echo "Download and extract the project then run the setup from there."
-	echo "https://github.com/shuntress/web-core/archive/main.zip"
+	echo "https://github.com/shuntress/web-host/archive/main.zip"
 	exit 1
 fi
 
@@ -72,5 +72,5 @@ systemctl start nodeserver
 
 
 echo "Done."
-echo "Try http://localhost/web-core-about.html"
+echo "Try http://localhost/web-host-about.html"
 echo "Request an account with https://localhost/account then check the administration folder."

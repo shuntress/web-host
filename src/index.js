@@ -103,7 +103,7 @@ function loadDirectory(req, res, stats, webPath, absoluteSystemPath) {
 
 		// If this request is for the root directory, check for an optionally
 		// configured index file matched on domain name. This configuration comes
-		// from web-core/administration/config.json and is expected to be a simple
+		// from web-host/administration/config.json and is expected to be a simple
 		// key:value pair of domain:indexFile
 		// If this is not a domain root or if no index is configured, check for a file named "index"
 		const index = ((webPath === '/') && config.indices[req.headers.host]) || files.find(file => file === "index.html");

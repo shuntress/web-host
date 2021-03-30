@@ -44,7 +44,7 @@
 	<ol>
 		<li>
 			Check out the <a
-			href="https://github.com/shuntress/web-core/tree/main/administration/setup">setup
+			href="https://github.com/shuntress/web-host/tree/main/administration/setup">setup
 			scripts</a> (if you haven't already) and configure your system to run this as a
 			persistent service.
 		</li>
@@ -106,10 +106,10 @@
 	</p>
 
 	<p>
-		<a href="https://github.com/shuntress/web-core/blob/master/src/dispatch.js">dispatch.js</a> handles
+		<a href="https://github.com/shuntress/web-host/blob/master/src/dispatch.js">dispatch.js</a> handles
 		scanning for controller modules when the service starts.
 	</p>
-	<p> A 'controller module' is any .js file in the web-core/controllers directory.
+	<p> A 'controller module' is any .js file in the web-host/controllers directory.
 		Controllers found in this scan will be called when the server receives a request
 		where the path matches down to an exported function.
 	</p>
@@ -124,7 +124,7 @@
 		<li>
 			<p>
 				The basic auth credentials,
-				certificate, and secret key are in web-core/administration/ and
+				certificate, and secret key are in web-host/administration/ and
 				noted in .gitignore to help prevent them being
 				accidentally included in source control
 				management history.</p>

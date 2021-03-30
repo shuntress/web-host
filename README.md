@@ -24,11 +24,11 @@ A CS degree should not feel like a requirement for self-hosting your resume, blo
 # Quick Start
 **Install Node**: [https://nodejs.org/](https://nodejs.org/)
 
-**Download and extract the source code**: [https://github.com/shuntress/web-core/archive/main.zip](https://github.com/shuntress/web-core/archive/main.zip)  
-*(alternatively, you can use [Git](https://git-scm.com/downloads) to clone the repository: `git clone https://github.com/shuntress/web-core.git`)*  
+**Download and extract the source code**: [https://github.com/shuntress/web-host/archive/main.zip](https://github.com/shuntress/web-host/archive/main.zip)  
+*(alternatively, you can use [Git](https://git-scm.com/downloads) to clone the repository: `git clone https://github.com/shuntress/web-host.git`)*  
 
-**Navigate to your install location**: `cd {path/to/web-core-main/on/your/system}`  
-*(the folder will be named `web-core-main` if you downloaded the archive zip file. It will be named `web-core` if you cloned the repository without changing its name)*
+**Navigate to your install location**: `cd {path/to/web-host-main/on/your/system}`  
+*(the folder will be named `web-host-main` if you downloaded the archive zip file. It will be named `web-host` if you cloned the repository without changing its name)*
 
 **Run the site**: `node src/site.js`
 
@@ -87,6 +87,6 @@ If the first `.authorized_users` does not list the user's name, the request will
 If a list of authorized users exists for a resource that does not have `private` in the path, the user will be prompted to login because a name is required for authorization.
 
 ## Configuration Options
-Config defaults are in [src/config.js](https://github.com/shuntress/web-core/blob/main/src/config.js).
+Config defaults are in [src/config.js](https://github.com/shuntress/web-host/blob/main/src/config.js).
 
 Defaults may be overridden by setting the corresponding property in `administration/config.json`

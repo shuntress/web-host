@@ -16,6 +16,6 @@ administration/config.json
 administration/dailies.log
 
 # Exempt the example files from the wild-card ignore.
-!content/web-core-about.html
-!controllers/web-core-example.js
+!content/web-host-about.html
+!controllers/web-host-example.js
 
