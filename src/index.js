@@ -127,7 +127,7 @@ function loadDirectory(req, res, stats, webPath, absoluteSystemPath) {
 	</head>
 	<body>
 		<div class="content">
-			<h2>${webPath.split(path.sep).join('/')}</h2>
+			<h2>${path.basename(webPath)}</h2>
 			<ul>
 				${parentWebPath ? `<li><a href="${parentWebPath}">..</a></li>`:''}
 				${files.map(file =>`<li><a href="${path.join(webPath, encodeURIComponent(file))}">${file}</a></li>`).join('\n\t')}
