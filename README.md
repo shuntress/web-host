@@ -1,6 +1,6 @@
 
 ## What is this?
-A small web host that uses only node's built-ins to handle:
+Use only node's built-ins to handle:
  - static content (filesystem index)
  - dynamic content (server-side javascript)
  - secure authentication ([HTTP Basic](https://tools.ietf.org/html/rfc7617), [TLS](https://tools.ietf.org/html/rfc8446), [pbkdf2](https://tools.ietf.org/html/rfc8018))
