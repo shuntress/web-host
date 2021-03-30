@@ -1,9 +1,6 @@
 /**
  * This module handles interfacing with custom server-side code
- * 
- * `site.js` calls `getDispatcher` to get back a function that
- * checks a given URL to see if a controller action exists to
- * handle that URL.
+ * by matching the given URL against the list of a controller actions.
  * 
  * By default, these modules are found in the "controllers" directory.
  */
