@@ -41,7 +41,7 @@ A CS degree should not feel like a requirement for self-hosting your resume, blo
 
 ## Slightly Slower Start
 
-This builds on the quick start by adding a certificate to enable HTTPS and user authentication/authorization.
+This builds on the quick start by adding a certificate to enable HTTPS and user authentication/authorization.  
 *This part does feel like CS degree stuff but is only necessary if you want to enable secure access control.*  
 *If you are OK with everything being public, you can skip this part.*
 
