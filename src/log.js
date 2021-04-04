@@ -27,6 +27,7 @@ let dailies = fs.createWriteStream(dailyLogFile, {flags: 'a+'});
 let currentOldestTimestamp = Date.now();
 
 // Read just the first line of the current daily log.
+let initialized = false;
 const rl = readline.createInterface({
 	input: fs.createReadStream(dailyLogFile)
 }).on('line', oldestDailyEntry => {
@@ -35,15 +36,19 @@ const rl = readline.createInterface({
 
 	currentOldestTimestamp = oldestDailyEntry.split(' ')[0];
 	turnoverDaily(Date.now());
+
+	initialized=true;
 });
 
 module.exports = (...args) => {
 	console.log(...args);
 
-	const now = Date.now();
-	turnoverDaily(now);
+	if(initialized) {
+		const now = Date.now();
+		turnoverDaily(now);
 
-	dailies.write(`${now} ${args.join(' ')} ${os.EOL}`);
+		dailies.write(`${now} ${args.join(' ')} ${os.EOL}`);
+	}
 }
 
 module.exports.info = (...args) => module.exports("[Info]", ...args);

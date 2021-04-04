@@ -4,10 +4,15 @@
  */
 
 const path = require('path');
+const log = require(path.join(__dirname, 'log.js'));
 let config = null;
 try {
 	config = require(path.join(__dirname, '..', 'administration', 'config.json'));
-} catch (_e) {}
+	log.info(log.tags("Startup", "Config"), "Config file found");
+} catch (err) {
+	if(err.code=="MODULE_NOT_FOUND") log.info(log.tags("Startup", "Config"), "No config file");
+	else log.error(log.tags("Startup", "Config"), err.message);
+}
 
 // Port to listen for HTTP requests
 module.exports.httpPort = config?.httpPort ?? 80;
