@@ -8,7 +8,7 @@ const log = require(path.join(__dirname, 'log.js'));
 let config = null;
 try {
 	config = require(path.join(__dirname, '..', 'administration', 'config.json'));
-	log.info(log.tags("Startup", "Config"), "Config file found");
+	log.info(log.tags("Startup", "Config"), "Config load success");
 } catch (err) {
 	if(err.code=="MODULE_NOT_FOUND") log.info(log.tags("Startup", "Config"), "No config file");
 	else log.error(log.tags("Startup", "Config"), err.message);

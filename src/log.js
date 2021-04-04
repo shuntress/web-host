@@ -12,33 +12,7 @@ const path = require('path');
 const os = require('os');
 const readline = require('readline');
 
-const config = require(path.join(__dirname, 'config.js'));
-
-const dailyLogFile = config.dailyLogFile;
-let dailies = fs.createWriteStream(dailyLogFile, {flags: 'a+'});
-
-// HACK: Set a fake timestamp that can't be old enough to delete the dailies
-// while things log during initialization. This prevents an error caused by
-// trying to delete the dailies before reading the first line.
-//
-// The best way to replace this would be a clean way to synchronously read the
-// first line of a file so we can initialize an actual value for the "oldest log
-// entry" timestamp before allowing anything to log.
-let currentOldestTimestamp = Date.now();
-
-// Read just the first line of the current daily log.
 let initialized = false;
-const rl = readline.createInterface({
-	input: fs.createReadStream(dailyLogFile)
-}).on('line', oldestDailyEntry => {
-	rl.close();
-	rl.removeAllListeners();
-
-	currentOldestTimestamp = oldestDailyEntry.split(' ')[0];
-	turnoverDaily(Date.now());
-
-	initialized=true;
-});
 
 module.exports = (...args) => {
 	console.log(...args);
@@ -57,6 +31,33 @@ module.exports.warning = (...args) => module.exports("[Warning]", ...args);
 
 module.exports.tags = (...tags) => `${tags.map(tag => `(${tag})`).join(' ')}`;
 module.exports.tag = module.exports.tags;
+
+const config = require(path.join(__dirname, 'config.js'));
+
+const dailyLogFile = config.dailyLogFile;
+let dailies = fs.createWriteStream(dailyLogFile, {flags: 'a+'});
+
+// HACK: Set a fake timestamp that can't be old enough to delete the dailies
+// while things log during initialization. This prevents an error caused by
+// trying to delete the dailies before reading the first line.
+//
+// The best way to replace this would be a clean way to synchronously read the
+// first line of a file so we can initialize an actual value for the "oldest log
+// entry" timestamp before allowing anything to log.
+let currentOldestTimestamp = Date.now();
+
+// Read just the first line of the current daily log.
+const rl = readline.createInterface({
+	input: fs.createReadStream(dailyLogFile)
+}).on('line', oldestDailyEntry => {
+	rl.close();
+	rl.removeAllListeners();
+
+	currentOldestTimestamp = oldestDailyEntry.split(' ')[0];
+	turnoverDaily(Date.now());
+
+	initialized=true;
+});
 
 /**
  * Compare the given timestamp against the oldest log in the daily log file.
