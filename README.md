@@ -19,7 +19,7 @@ The setup script targets [systemd](https://systemd.io/) to install this software
 ## Why?
 Small-scale web publishing should be simple.
 
-A CS degree should not feel like a requirement for self-hosting your resume, blog, or photos.
+A CS degree should not feel like a requirement to self-host your resume, blog, or photos.
 
 # Quick Start
 **Install Node**: [https://nodejs.org/](https://nodejs.org/)
