@@ -54,3 +54,5 @@ module.exports.pathToUserAccountRequests = config?.pathToUserAccountRequests ?? 
 // Tracking random guess usernames allows them to be treated and locked the same
 // as real accounts.
 module.exports.totalUsernameLimit = config?.totalUsernameLimit ?? 200;
+
+module.exports.custom = config?.custom

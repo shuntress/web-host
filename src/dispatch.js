@@ -118,7 +118,7 @@ const scan = (dir) => {
 			let controller = require(controllerPath);
 			controllers[controllerPath] = controller;
 			if (controller.init) {
-				controller.init(wwwRoot);
+				controller.init(wwwRoot, {auth, log, config});
 			}
 		} else if (
 			stats.isDirectory()
