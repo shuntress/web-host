@@ -221,6 +221,11 @@ module.exports.sendStatusPage = (_req, res) => {
 				border-bottom: 1px solid black;
 			}
 
+			ol {
+				line-break: anywhere;
+				width: 4in;
+			}
+
 			strong {
 				color: red;
 			}
