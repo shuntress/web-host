@@ -24,7 +24,7 @@ module.exports.useHttps = config?.useHttps ?? false;
 module.exports.serverPrivateKeyPath = config?.serverPrivateKeyPath ?? path.join(__dirname, '..', 'administration', 'key.pem');
 module.exports.serverCertificatePath = config?.serverCertificatePath ?? path.join(__dirname, '..', 'administration', 'certificate.pem');
 
-// Port to listen for HTTP requests
+// Port to listen for HTTPS requests
 module.exports.httpsPort = config?.httpsPort ?? 443;
 
 // Path to temporary log duplicates file
@@ -44,7 +44,7 @@ module.exports.wwwRoot = config?.wwwRoot ?? path.join(__dirname, '..', 'content'
 // Path to custom server-side javascript modules
 module.exports.controllerRoot = config?.controllerRoot ?? path.join(__dirname, '..', 'controllers');
 
-// Path to account and account request data
+// Paths to account and account request data
 module.exports.pathToUserCredentials = config?.pathToUserCredentials ?? path.join(__dirname, '..', 'administration', 'user_credentials.txt');
 module.exports.pathToUserAccountRequests = config?.pathToUserAccountRequests ?? path.join(__dirname, '..', 'administration', 'account_creation_requests.txt');
 
@@ -55,4 +55,6 @@ module.exports.pathToUserAccountRequests = config?.pathToUserAccountRequests ?? 
 // as real accounts.
 module.exports.totalUsernameLimit = config?.totalUsernameLimit ?? 200;
 
-module.exports.custom = config?.custom
+// placeholder for arbitrary configuration
+module.exports.custom = config?.custom;
+
