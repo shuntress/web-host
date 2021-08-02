@@ -124,10 +124,53 @@ function loadDirectory(req, res, stats, webPath, absoluteSystemPath) {
 		<link rel="stylesheet" href="/style.css">
 		<link rel="stylesheet" href="/layout.css">
 		<title>Index of ${webPath.split(path.sep).join('/')}</title>
+		<style>
+			.gallery-selected {
+				background: grey;
+			}
+
+			img.loading {
+				background: transparent url(/spinner.gif) no-repeat scroll center center;
+			}
+		</style>
+		<script>
+			let imgPointer = 0;
+			const keyCodeN = 78;
+			const keyCodeB = 66;
+			const images = [${files.filter(file => path.extname(file) === '.jpg' || path.extname(file) === '.JPG').map(file => `"${path.join(webPath, encodeURIComponent(file))}"`)}];
+			console.log(images);
+			window.addEventListener('keydown', advanceImage);
+			function advanceImage(e) {
+				switch(e.keyCode) {
+					case keyCodeN:
+						imgPointer = (imgPointer + 1) % images.length;
+						break;
+					case keyCodeB:
+						if (imgPointer == 0) imgPointer = images.length;
+						imgPointer = (imgPointer - 1) % images.length;
+						break;
+					default:
+						return;
+						break;
+				}
+
+				const gallery = document.querySelector("#gallery");
+				gallery.removeAttribute('src');
+				gallery.setAttribute('src', images[imgPointer]);
+				document.querySelectorAll(".gallery-selected").forEach(node => node.classList.remove("gallery-selected"));
+				const node = document.querySelectorAll("a[href='" + images[imgPointer] + "']")[0]
+				if (node) node.classList.add("gallery-selected");
+			};
+
+			function tapAdvance() {
+				advanceImage({keyCode: keyCodeN});
+			}
+		</script>
 	</head>
 	<body>
 		<div class="content">
 			<h2>${path.basename(webPath)}</h2>
+			<img id="gallery" onmousedown="tapAdvance()" ontouchstart="tapAdvance();" class="loading" src="${path.join(webPath, encodeURIComponent(files.filter(file => path.extname(file) === '.jpg' || path.extname(file) === '.JPG')[0]))}"></img>
 			<ul>
 				${parentWebPath ? `<li><a href="${parentWebPath}">..</a></li>`:''}
 				${files.map(file =>`<li><a href="${path.join(webPath, encodeURIComponent(file))}">${file}</a></li>`).join('\n\t')}
