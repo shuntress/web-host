@@ -129,8 +129,26 @@ function loadDirectory(req, res, stats, webPath, absoluteSystemPath) {
 				background: grey;
 			}
 
-			img.loading {
-				background: transparent url(/spinner.gif) no-repeat scroll center center;
+			@keyframes spinner {
+				to {transform: rotate(360deg);}
+			}
+
+			.spinner:before{
+				content: '';
+				box-sizing: border-box;
+				position: absolute;
+				top: 50%;
+				left: 50%;
+				width: 20px;
+				height: 20px;
+				margin-top: -10px;
+				margin-left: -10px;
+				border-radius: 50%;
+				border: 3px solid #551199;
+				border-top-color: #004488;
+				border-right-color: #cc2769;
+				border-bottom-color: #551199;
+				animation: spinner .6s linear infinite;
 			}
 		</style>
 		<script>
@@ -138,7 +156,7 @@ function loadDirectory(req, res, stats, webPath, absoluteSystemPath) {
 			const keyCodeN = 78;
 			const keyCodeB = 66;
 			const images = [${files.filter(file => path.extname(file) === '.jpg' || path.extname(file) === '.JPG').map(file => `"${path.join(webPath, encodeURIComponent(file))}"`)}];
-			console.log(images);
+
 			window.addEventListener('keydown', advanceImage);
 			function advanceImage(e) {
 				switch(e.keyCode) {
@@ -155,8 +173,11 @@ function loadDirectory(req, res, stats, webPath, absoluteSystemPath) {
 				}
 
 				const gallery = document.querySelector("#gallery");
-				gallery.removeAttribute('src');
-				gallery.setAttribute('src', images[imgPointer]);
+				gallery.classList.add("spinner");
+
+				const image = document.querySelector("#image");
+				image.removeAttribute('src');
+				image.setAttribute('src', images[imgPointer]);
 				document.querySelectorAll(".gallery-selected").forEach(node => node.classList.remove("gallery-selected"));
 				const node = document.querySelectorAll("a[href='" + images[imgPointer] + "']")[0]
 				if (node) node.classList.add("gallery-selected");
@@ -165,12 +186,18 @@ function loadDirectory(req, res, stats, webPath, absoluteSystemPath) {
 			function tapAdvance() {
 				advanceImage({keyCode: keyCodeN});
 			}
+
+			function handleLoadEnd(e) {
+				document.querySelector("#gallery").classList.remove("spinner");
+			}
 		</script>
 	</head>
 	<body>
 		<div class="content">
 			<h2>${path.basename(webPath)}</h2>
-			<img id="gallery" onmousedown="tapAdvance()" ontouchstart="tapAdvance();" class="loading" src="${path.join(webPath, encodeURIComponent(files.filter(file => path.extname(file) === '.jpg' || path.extname(file) === '.JPG')[0]))}"></img>
+			<div id="gallery" class="spinner" style="position: relative">
+				<img id="image" onload="handleLoadEnd(event);" onmousedown="tapAdvance()" ontouchstart="tapAdvance();" class="loading" src="${path.join(webPath, encodeURIComponent(files.filter(file => path.extname(file) === '.jpg' || path.extname(file) === '.JPG')[0]))}"></img>
+			</div>
 			<ul>
 				${parentWebPath ? `<li><a href="${parentWebPath}">..</a></li>`:''}
 				${files.map(file =>`<li><a href="${path.join(webPath, encodeURIComponent(file))}">${file}</a></li>`).join('\n\t')}
