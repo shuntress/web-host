@@ -116,6 +116,7 @@ function loadDirectory(req, res, stats, webPath, absoluteSystemPath) {
 
 		// Otherwise, since no index was found, generate and index for this directory using this template.
 		const parentWebPath = path.dirname(webPath);
+		const images = files.filter(file => path.extname(file) === '.jpg' || path.extname(file) === '.JPG');
 		const output =
 `<html>
 <meta charset="UTF-8">
@@ -123,87 +124,27 @@ function loadDirectory(req, res, stats, webPath, absoluteSystemPath) {
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<link rel="stylesheet" href="/style.css">
 		<link rel="stylesheet" href="/layout.css">
+		<link rel="stylesheet" href="/index-gallery.css">
 		<title>Index of ${webPath.split(path.sep).join('/')}</title>
-		<style>
-			.gallery-selected {
-				background: grey;
-			}
-
-			@keyframes spinner {
-				to {transform: rotate(360deg);}
-			}
-
-			.spinner:before{
-				content: '';
-				box-sizing: border-box;
-				position: absolute;
-				top: 50%;
-				left: 50%;
-				width: 20px;
-				height: 20px;
-				margin-top: -10px;
-				margin-left: -10px;
-				border-radius: 50%;
-				border: 3px solid #551199;
-				border-top-color: #004488;
-				border-right-color: #cc2769;
-				border-bottom-color: #551199;
-				animation: spinner .6s linear infinite;
-			}
-		</style>
-		<script>
-			let imgPointer = 0;
-			const keyCodeN = 78;
-			const keyCodeB = 66;
-			const images = [${files.filter(file => path.extname(file) === '.jpg' || path.extname(file) === '.JPG').map(file => `"${path.join(webPath, encodeURIComponent(file))}"`)}];
-
-			window.addEventListener('keydown', advanceImage);
-			function advanceImage(e) {
-				switch(e.keyCode) {
-					case keyCodeN:
-						imgPointer = (imgPointer + 1) % images.length;
-						break;
-					case keyCodeB:
-						if (imgPointer == 0) imgPointer = images.length;
-						imgPointer = (imgPointer - 1) % images.length;
-						break;
-					default:
-						return;
-						break;
-				}
-
-				const gallery = document.querySelector("#gallery");
-				gallery.classList.add("spinner");
-
-				const image = document.querySelector("#image");
-				image.removeAttribute('src');
-				image.setAttribute('src', images[imgPointer]);
-				document.querySelectorAll(".gallery-selected").forEach(node => node.classList.remove("gallery-selected"));
-				const node = document.querySelectorAll("a[href='" + images[imgPointer] + "']")[0]
-				if (node) node.classList.add("gallery-selected");
-			};
-
-			function tapAdvance() {
-				advanceImage({keyCode: keyCodeN});
-			}
-
-			function handleLoadEnd(e) {
-				document.querySelector("#gallery").classList.remove("spinner");
-			}
-		</script>
 	</head>
 	<body>
 		<div class="content">
 			<h2>${path.basename(webPath)}</h2>
-			<div id="gallery" class="spinner" style="position: relative">
-				<img id="image" onload="handleLoadEnd(event);" onmousedown="tapAdvance()" ontouchstart="tapAdvance();" class="loading" src="${path.join(webPath, encodeURIComponent(files.filter(file => path.extname(file) === '.jpg' || path.extname(file) === '.JPG')[0]))}"></img>
+			${ images.length > 0 ?
+`			<div id="gallery" class="spinner" style="position: relative">
+				<img id="image-a" onload="handleLoadEnd(event);" onmousedown="tapAdvance()" class="visible" src="${path.join(webPath, encodeURIComponent(images[0]))}"></img>
+				${images.length > 1 ?
+`				<img id="image-b" onload="handleLoadEnd(event);" onmousedown="tapAdvance()" class="hidden next" src="${path.join(webPath, encodeURIComponent(images[1]))}"></img>
+` : ""}
 			</div>
+` : ""}
 			<ul>
 				${parentWebPath ? `<li><a href="${parentWebPath}">..</a></li>`:''}
 				${files.map(file =>`<li><a href="${path.join(webPath, encodeURIComponent(file))}">${file}</a></li>`).join('\n\t')}
 			</ul>
 			<address>Modified: ${stats.atime.toLocaleDateString("en-US", {month: "short", day: "2-digit", year: "numeric"})}</address>
 		</div>
+		<script src="/index-gallery.js"></script>
 	</body>
 </html>`;
 		res.writeHead(200, {"Content-Type": "text/html", "Content-Length": output.length});

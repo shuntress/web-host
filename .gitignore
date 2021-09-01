@@ -19,3 +19,5 @@ administration/dailies.log
 !content/web-host-about.html
 !controllers/web-host-example.js
 
+# Exempt feature code that is separated out from core source code to improve readability
+!content/index-gallery*
