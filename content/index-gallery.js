@@ -3,6 +3,7 @@ let onDeckImgPointer = 0;
 let cacheDirection = "next";
 const keyCodeN = 78;
 const keyCodeB = 66;
+const keyCodeF = 70;
 const images = Array.from(document.querySelectorAll("a[href$='.jpg' i]"));
 
 window.addEventListener('keydown', advanceImage);
@@ -25,6 +26,10 @@ function advanceImage(e) {
          cacheHit = (cacheDirection == "back");
          cacheDirection = "back";
          break;
+			case keyCodeF:
+				// F For Fullscreen
+				document.querySelector("#gallery").classList.toggle("fullscreen");
+				return;
       default:
          return;
    }
@@ -61,8 +66,10 @@ function advanceImage(e) {
    images[imgPointer].classList.add("gallery-selected");
 };
 
-function tapAdvance() {
-   advanceImage({keyCode: keyCodeN});
+function handleClick(e) {
+	if (e.button === 0) {
+		advanceImage({keyCode: keyCodeN});
+	}
 }
 
 function handleLoadEnd(e) {
