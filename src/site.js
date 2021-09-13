@@ -32,11 +32,11 @@ const httpPort = config.httpPort;
 const httpServer = http.createServer(function (req, res) {
 	if (config.useHttps) {
 		let redirectLocation = "https://" + (req.headers.host ?? '') + (req.url ?? '');
-		log.info(log.tags('Request', httpPort, req.method, 'Redirect'), JSON.stringify({from: req.socket.remoteAddress, for: `${req.headers.host}${req.url}`, redirectTo: redirectLocation}));
+		log.info(log.tags('Request', httpPort, req.method, 'Redirect'), JSON.stringify({user: auth.currentUser(req), from: req.socket.remoteAddress, for: `${req.headers.host}${req.url}`, redirectTo: redirectLocation}));
 		res.writeHead(302, {'Location': redirectLocation});
 		res.end();
 	} else {
-		log.info(log.tags('Request', httpPort, req.method), JSON.stringify({from: req.socket.remoteAddress, for: `${req.headers.host}${req.url}`}));
+		log.info(log.tags('Request', httpPort, req.method), JSON.stringify({user: auth.currentUser(req), from: req.socket.remoteAddress, for: `${req.headers.host}${req.url}`}));
 
 		// Auth is not used here because HTTPS is required in order to transfer passwords securely.
 		dispatch(req, res);
@@ -71,7 +71,7 @@ if (config.useHttps) {
 	 */
 	const httpsPort = config.httpsPort;
 	const httpsServer = https.createServer(httpsOptions, function (req, res) {
-		log.info(log.tags('Request', httpsPort, req.method), JSON.stringify({from: req.socket.remoteAddress, for: `${req.headers.host}${req.url}`}));
+		log.info(log.tags('Request', httpsPort, req.method), JSON.stringify({user: auth.currentUser(req) ?? "no user info", from: req.socket.remoteAddress, for: `${req.headers.host}${req.url}`}));
 
 		/**
 		 * auth.js checks for valid credentials in the authentication header. It

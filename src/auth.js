@@ -104,7 +104,7 @@ module.exports.authenticate = function authorize(req, res, callback) {
 /**
  * Check for authorization file. Scan up the tree from the requested resource to the root.
  * In the first auth file found, check if the current user is on the list of authorized users
- * for the requested resource. If not auth file is found, default to open.
+ * for the requested resource. If no auth file is found, default to open.
  *
  * @param {Node's request object} req  https://nodejs.org/api/http.html#http_class_http_clientrequest
  * @param {Node's response object} res https://nodejs.org/api/http.html#http_class_http_serverresponse
@@ -149,6 +149,8 @@ module.exports.authenticate = function authorize(req, res, callback) {
 		});
 	});
 }
+
+module.exports.currentUser = getUserName;
 
 /**
  * Handle sending/receiving the new account request form.
@@ -310,7 +312,7 @@ function getPasswordHash(salt, password, callback) {
  *
  * @return {string?} User name
  */
-function getUserName(req) {
+function getUserName (req) {
 	const auth = req.headers.authorization;
 	const parts = auth && auth.split(' ');
 	const credentials = parts && parts.length > 1 && Buffer.from(parts[1], 'base64').toString('ascii').split(':');
