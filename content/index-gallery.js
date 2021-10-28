@@ -95,6 +95,11 @@ window.addEventListener("touchend",function(event){
       //the only finger that hit the screen left it
       var end = event.changedTouches.item(0).clientX;
 
+			if(Math.abs(end-start) < offset) {
+				advanceImage({keyCode: keyCodeF});
+				return;
+			}
+
       if(end > start + offset){
          //a left -> right swipe
          // Key code "B" for "Back"
