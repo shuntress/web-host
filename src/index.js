@@ -131,10 +131,10 @@ function loadDirectory(req, res, stats, webPath, absoluteSystemPath) {
 		<div class="content">
 			<h2>${path.basename(webPath)}</h2>
 			${ images.length > 0 ?
-`			<div id="gallery" class="gallery spinner">
-				<img id="image-a" onload="handleLoadEnd(event);" onmousedown="handleClick(event)" class="visible" src="${path.join(webPath, encodeURIComponent(images[0]))}"></img>
+`			<div id="gallery" onmousedown="handleClick(event)" ontouchstart="handleTouchStart(event);" ontouchend="handleTouchEnd(event);" class="gallery spinner">
+				<img id="image-a" onload="handleLoadEnd(event);" class="visible" src="${path.join(webPath, encodeURIComponent(images[0]))}"></img>
 				${images.length > 1 ?
-`				<img id="image-b" onload="handleLoadEnd(event);" onmousedown="handleClick(event)" class="hidden next" src="${path.join(webPath, encodeURIComponent(images[1]))}"></img>
+`				<img id="image-b" onload="handleLoadEnd(event);" class="hidden next" src="${path.join(webPath, encodeURIComponent(images[1]))}"></img>
 ` : ""}
 			</div>
 ` : ""}

@@ -6,7 +6,7 @@ const keyCodeB = 66;
 const keyCodeF = 70;
 const images = Array.from(document.querySelectorAll("a[href$='.jpg' i]"));
 
-window.addEventListener('keydown', advanceImage);
+window.addEventListener("keydown", advanceImage);
 function advanceImage(e) {
    // Get the index of the next image
    // If some other key was pressed, return.
@@ -68,7 +68,7 @@ function advanceImage(e) {
 
 function handleClick(e) {
 	if (e.button === 0) {
-		advanceImage({keyCode: keyCodeN});
+		advanceImage({keyCode: keyCodeF});
 	}
 }
 
@@ -79,7 +79,7 @@ function handleLoadEnd(e) {
 // https://stackoverflow.com/questions/45648886/swipe-left-right-for-a-webpage
 // ================================================
 var start = null;
-window.addEventListener("touchstart",function(event){
+function handleTouchStart(event) {
    if(event.touches.length === 1){
       //just one finger touched
       start = event.touches.item(0).clientX;
@@ -87,16 +87,15 @@ window.addEventListener("touchstart",function(event){
       //a second finger hit the screen, abort the touch
       start = null;
    }
-});
+}
 
-window.addEventListener("touchend",function(event){
+function handleTouchEnd(event) {
    var offset = 50; // at least 50px to count as a swipe
    if(start){
       //the only finger that hit the screen left it
       var end = event.changedTouches.item(0).clientX;
 
 			if(Math.abs(end-start) < offset) {
-				advanceImage({keyCode: keyCodeF});
 				return;
 			}
 
@@ -111,5 +110,5 @@ window.addEventListener("touchend",function(event){
          advanceImage({keyCode: keyCodeN});
       }
    }
-});
+}
 // ================================================
