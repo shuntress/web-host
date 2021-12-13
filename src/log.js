@@ -91,6 +91,7 @@ module.exports.sendStatusPage = (_req, res) => {
 	const hours = {};
 	for(let hour=0; hour < 24; hour++)
 		hours[hour]={
+			users: {},
 			pages: {},
 			total: 0,
 		};
@@ -117,10 +118,13 @@ module.exports.sendStatusPage = (_req, res) => {
 			let date = new Date(timestamp);
 			let data = JSON.parse(message);
 
+			let hour = hours[date.getHours()];
 			if(!hours[date.getHours()].pages[data.for]) hours[date.getHours()].pages[data.for] = 0;
 			hours[date.getHours()].pages[data.for]++
 			hours[date.getHours()].total++;
 
+			if(!hour.users[data.from]) hour.users[data.from] = 0;
+			hour.users[data.from]++;
 		}
 	}).on('close', () => {
 		const bottomChar='&#x2500', wallChar='&#x2551', barChar='&#x2588', markerChar='&#x2506';
@@ -176,7 +180,7 @@ module.exports.sendStatusPage = (_req, res) => {
 					let digitCount = 0;
 					if (hour.pages[0]) digitCount = hour.pages[0].length;
 					out += '<li>\n';
-					out += `<div ${hour.total > 0 ? 'class="caret"' : ''}>${h > thisHour || hour.total === 0 ? '<span class="de-emphasized">' : ''}<b>${hour.start}${h % 12 ? ':00' : ''}</b> - ${h == thisHour ? '<span class="now">' : ''}<b>${hour.end}${(h + 1) % 12 ? ':00' : ''}</b>${ timeNameSequence.includes(hour.end) ? '' : `${(h + 1) < 12 ? "<em>am</em>" : "<em>pm</em>" }`}${h == thisHour ? '</span>' : ''}${h > thisHour ? '' : ` &#x2014; <strong>${hour.total}</strong> hits for ${Object.keys(hour.pages).length} pages`}${h+1 < thisHour ? '</span>' : ''}</div>\n`;
+					out += `<div ${hour.total > 0 ? 'class="caret"' : ''}>${h > thisHour || hour.total === 0 ? '<span class="de-emphasized">' : ''}<b>${hour.start}${h % 12 ? ':00' : ''}</b> - ${h == thisHour ? '<span class="now">' : ''}<b>${hour.end}${(h + 1) % 12 ? ':00' : ''}</b>${ timeNameSequence.includes(hour.end) ? '' : `${(h + 1) < 12 ? "<em>am</em>" : "<em>pm</em>" }`}${h == thisHour ? '</span>' : ''}${h > thisHour ? '' : ` &#x2014; <strong>${hour.total}</strong> hits for ${Object.keys(hour.pages).length} pages from ${Object.keys(hour.users).length} IPs`}${h+1 < thisHour ? '</span>' : ''}</div>\n`;
 					out += '<ol class="nested">\n';
 					// TODO: Add a "Total redirects" stat for http->https redirects
 					out += Object.keys(hour.pages).map(key => ({page: key, hits: hour.pages[key]})).sort((a,b) => b.hits - a.hits).map(({page, hits}) => `<li>${hits.toString().padStart(digitCount, ' ')}: ${page}</li>`).join('\n');
@@ -187,6 +191,10 @@ module.exports.sendStatusPage = (_req, res) => {
 
 			return out;
 		};
+
+		const getUsers = () => {
+			return "";
+		}
 
 		const pageTemplate = `<!DOCTYPE html>
 <html>
