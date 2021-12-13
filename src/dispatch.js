@@ -1,8 +1,8 @@
 /**
  * This module handles interfacing with custom server-side code
- * by matching the given URL against the list of a controller actions.
+ * by matching the given URL against the list of a plugin actions.
  * 
- * By default, these modules are found in the "controllers" directory.
+ * By default, these modules are found in the "plugins" directory.
  */
 
 
@@ -16,33 +16,33 @@ const index = require(path.join(__dirname, 'index.js'));
 const config = require(path.join(__dirname, 'config.js'));
 
 const wwwRoot = config.wwwRoot;
-const controllerRoot = config.controllerRoot;
+const pluginRoot = config.pluginRoot;
 
 /**
- * This functions checks the list of controllers for one that
+ * This functions checks the list of plugins for one that
  * has a path matching the URL then calls a function on that
- * controller that matches the last part of the URL path
+ * plugin that matches the last part of the URL path
  * 
  * It also parses the query string on the URL and passes that
  * to the action function as a plain object.
  * 
- * Return true if a controller action was called.
+ * Return true if a plugin action was called.
  * @param {Node's request object} req  https://nodejs.org/api/http.html#http_class_http_clientrequest
  * @param {Node's response object} res https://nodejs.org/api/http.html#http_class_http_serverresponse
  */
 module.exports = (req, res, socket, head) => {
-	// parse url to determine controller/action
+	// parse url to determine plugin/action
 	const parsedUrl = new url.URL(req.url, req.protocol + '://' + req.headers.host);
 	const parts = parsedUrl.pathname.split('/').filter(p => p);
 
 	// Socket Upgrade Request
 	if (socket && head) {
-		const controller = parts.pop();
-		const controllerPath = path.join(...parts);
+		const plugin = parts.pop();
+		const pluginPath = path.join(...parts);
 
-		const find = path.join(controllerRoot, controllerPath, controller + '.js');
+		const find = path.join(pluginRoot, pluginPath, plugin + '.js');
 
-		let match = controllers[find];
+		let match = plugins[find];
 
 		if (match && match.webSocket) {
 			match.webSocket.handleUpgrade(req, socket, head, (ws) => {
@@ -66,42 +66,42 @@ module.exports = (req, res, socket, head) => {
 
 	if (parts.length > 1) {
 		const action = parts.pop();
-		const controller = parts.pop();
-		const controllerPath = path.join(...parts);
+		const plugin = parts.pop();
+		const pluginPath = path.join(...parts);
 
-		const find = path.join(controllerRoot, controllerPath, controller + '.js');
+		const find = path.join(pluginRoot, pluginPath, plugin + '.js');
 
 		/**
 		 * TODO: Fix this
 		 * If someone tries to run the init action, just abort.
-		 * Maybe figure out a better fix for this that allows controllers
+		 * Maybe figure out a better fix for this that allows plugins
 		 * to have a real action called init and correctly hides the framework
 		 * init from access.
 		 */
 		if (action == 'init') return false;
 
-		// check for controller in controller collection
-		if (action && controller && controllerPath) {
-			if (controllers[find]) {
-				if (controllers[find][action]) {
+		// check for plugin in plugin collection
+		if (action && plugin && pluginPath) {
+			if (plugins[find]) {
+				if (plugins[find][action]) {
 					const query = Array.from(parsedUrl.searchParams.keys()).reduce((a, k) => { return Object.assign({ [k]: parsedUrl.searchParams.get(k) }, a); }, {});
-					log.info(log.tags('Routing'), `dispatching request for ${action} on ${controller} in ${controllerPath} with ${JSON.stringify(query)}`);
-					controllers[find][action](req, res, query);
+					log.info(log.tags('Routing'), `dispatching request for ${action} on ${plugin} in ${pluginPath} with ${JSON.stringify(query)}`);
+					plugins[find][action](req, res, query);
 					return;
 				}
 			}
 		}
 	}
 
-	// No controller matches route. Instead, index the directory under content/ specified by the URL path.
+	// No plugin matches route. Instead, index the directory under content/ specified by the URL path.
 	index(req, res);
 }
 
 /**
- * Scan the controllerRoot for controller modules. Each detected
- * controller will be imported (require('found_controller')) and 
+ * Scan the pluginRoot for plugin modules. Each detected
+ * plugin will be imported (require('found_plugin')) and 
  * have its `init` function called. The init function is passed
- * the wwwRoot so that a the controller may access static data
+ * the wwwRoot so that a the plugin may access static data
  * 
  * @param {string} dir Current scan directory
  */
@@ -111,29 +111,29 @@ const scan = (dir) => {
 
 	// Check each file, if its a directory append to dir and pass to scan
 	nodes.forEach(node => {
-		const controllerPath = path.join(dir, node);
-		const stats = fs.lstatSync(controllerPath);
-		if (stats.isFile() && path.extname(controllerPath) == ".js") {
-						// If its a file append to controllers
-			let controller = require(controllerPath);
-			controllers[controllerPath] = controller;
-			if (controller.init) {
-				controller.init(wwwRoot, {auth, log, config});
+		const pluginPath = path.join(dir, node);
+		const stats = fs.lstatSync(pluginPath);
+		if (stats.isFile() && path.extname(pluginPath) == ".js") {
+						// If its a file append to plugins
+			let plugin = require(pluginPath);
+			plugins[pluginPath] = plugin;
+			if (plugin.init) {
+				plugin.init({wwwRoot, auth, log, config});
 			}
 		} else if (
 			stats.isDirectory()
-			&& !controllerPath.includes('node_modules')
+			&& !pluginPath.includes('node_modules')
 			&& node != 'data'
 		) {
 			/**
 			 * TODO: Hack fix to ignore node modules and app data.
 			 * Flesh this out... better... or something.
 			 */
-			scan(controllerPath);
+			scan(pluginPath);
 		}
 	});
 };
-const controllers = {}; // All modules found by scanning the controller directory. Key'd on path
-scan(controllerRoot);
-log.info(log.tags('Startup'), `found ${Object.keys(controllers).length} controller${Object.keys(controllers).length > 1 ? 's' : ''}`);
+const plugins = {}; // All modules found by scanning the plugin directory. Key'd on path
+scan(pluginRoot);
+log.info(log.tags('Startup'), `found ${Object.keys(plugins).length} plugin${Object.keys(plugins).length > 1 ? 's' : ''}`);
 

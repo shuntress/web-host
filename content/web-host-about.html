@@ -107,14 +107,14 @@
 
 	<p>
 		<a href="https://github.com/shuntress/web-host/blob/master/src/dispatch.js">dispatch.js</a> handles
-		scanning for controller modules when the service starts.
+		scanning for plugin modules when the service starts.
 	</p>
-	<p> A 'controller module' is any .js file in the web-host/controllers directory.
-		Controllers found in this scan will be called when the server receives a request
+	<p> A "plugin module" (or "controller") is any .js file in the web-host/plugin directory.
+		Plugins found in this scan will be called when the server receives a request
 		where the path matches down to an exported function.
 	</p>
 	<p>
-		https://{yourdomain}/{path}/{to}/{controller}/{controller name}/{function on module.exports}
+		https://{yourdomain}/{path}/{to}/{plugin}/{plugin name}/{function on module.exports}
 	</p>
 
 	<h2 class="note">

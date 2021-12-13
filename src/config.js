@@ -42,7 +42,7 @@ module.exports.indices = config?.indices ?? {};
 module.exports.wwwRoot = config?.wwwRoot ?? path.join(__dirname, '..', 'content');
 
 // Path to custom server-side javascript modules
-module.exports.controllerRoot = config?.controllerRoot ?? path.join(__dirname, '..', 'controllers');
+module.exports.pluginRoot = config?.pluginRoot ?? path.join(__dirname, '..', 'plugins');
 
 // Paths to account and account request data
 module.exports.pathToUserCredentials = config?.pathToUserCredentials ?? path.join(__dirname, '..', 'administration', 'user_credentials.txt');

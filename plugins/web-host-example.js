@@ -9,11 +9,12 @@
 
 const querystring = require("querystring");
 
-let wwwRoot = "";
-
-module.exports.init = (www_root) => {
-	wwwRoot = www_root;
-	return this;
+let wwwRoot, log, auth, config;
+module.exports.init = ({...args}) => {
+	log = args.log;
+	wwwRoot = args.wwwRoot;
+	auth = args.auth;
+	config = args.config;
 };
 
 module.exports.index = (req, res, data) => {
@@ -30,7 +31,7 @@ module.exports.index = (req, res, data) => {
 			`
 			)
 			.join(` `)}
-			<form method="POST" action="/example/post">
+			<form method="POST" action="/web-host-example/post">
 				<input type="text" name="someText" />
 				<input type="test" name="otherText" />
 				<input type="submit" value="Submit" />

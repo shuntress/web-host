@@ -4,8 +4,7 @@
  * The goal is to provide simple access to everything
  * you might need out of your website.
  *
- * All the defaults should be good but you can change
- * them if you want.
+ * All the defaults should be good but easy to change.
  */
 
 /**
@@ -25,8 +24,9 @@ const dispatch = require(path.join(__dirname, 'dispatch.js'));
 const config = require(path.join(__dirname, 'config.js'));
 
 /**
- * Non-secure http endpoint.
- * This just redirects to the secure endpoint.
+ * Basic http endpoint.
+ * 
+ * If https is enabled, this just redirects to the secure endpoint.
  */
 const httpPort = config.httpPort;
 const httpServer = http.createServer(function (req, res) {
@@ -46,8 +46,8 @@ httpServer.listen(httpPort);
 
 /**
  * To make the basic setup as simple as possible (by avoiding dealing with
- * certificates,) this is optional but you **must** use https in order to ensure
- * passwords are transferred securely.
+ * certificates,) this is optional but to transfer passwords securely (for login)
+ * you **must** use https.
  */
 if (config.useHttps) {
 	/**
@@ -57,7 +57,7 @@ if (config.useHttps) {
 	 * username:password which is expected to be transferred as a base64 encoded
 	 * plaintext header according to RFC7617.
 	 *
-	 * If they do not exist, try using the following command to generate them:
+	 * You can get trusted certificates from somewhere like https://letsencrypt.org/ or use the following command to generate them:
 	 *
 	 * openssl req -newkey rsa:2048 -nodes -keyout administration/key.pem -x509 -days 365 -out administration/certificate.pem
 	 */
