@@ -48,7 +48,7 @@ module.exports = function(req, res) {
  */
 function loadFile(req, res, stats, absoluteSystemPath) {
 	// Pre-Load checks
-	const mimeType = mimeMap[path.extname(absoluteSystemPath)];
+	const mimeType = mimeMap[path.extname(absoluteSystemPath)?.toLowerCase() ?? 'application/octet-stream'];
 	const filename = path.basename(absoluteSystemPath);
 
 	// Basis for content length calculation
@@ -56,7 +56,7 @@ function loadFile(req, res, stats, absoluteSystemPath) {
 	let rangeEnd = Math.max(0, stats.size - 1);
 
 	// "Resume Download" partial file
-	let isPartialRequest = (mimeType == 'audio/mpeg' || mimeType == 'audio/flac') && req.headers.range && req.headers.range.includes('=') && req.headers.range.includes('-');
+	let isPartialRequest = (mimeType == 'audio/mpeg' || mimeType == 'audio/flac' || mimeType == 'audio/wav') && req.headers.range && req.headers.range.includes('=') && req.headers.range.includes('-');
 	if (isPartialRequest) {
 		let rangeString = req.headers.range.split('=')[1].split('-');
 		rangeStart = rangeString[0];
@@ -165,6 +165,7 @@ const mimeMap = {
 	".mp3": "audio/mpeg",
 	".mp4": "video/mp4",
 	".flac": "audio/flac",
+	".wav": "audio/wav",
 	".jpg": "image/jpeg",
 	".jpeg": "image/jpeg",
 	".gif": "image/gif",
