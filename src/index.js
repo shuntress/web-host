@@ -78,6 +78,7 @@ function loadFile(req, res, stats, absoluteSystemPath) {
 
 	// Set response headers
 	const responseHeader = {
+		"Cache-Control": "max-age=31536000",
 		"Content-Type": mimeType,
 		"Content-Length": Number(rangeEnd) === Number(rangeStart) ? 0 : (Number(rangeEnd) + 1) - Number(rangeStart)
 	};
@@ -140,7 +141,7 @@ function loadDirectory(req, res, stats, webPath, absoluteSystemPath) {
 ` : ""}
 			<ul>
 				${parentWebPath ? `<li><a href="${parentWebPath}">..</a></li>`:''}
-				${files.map(file =>`<li><a href="${path.join(webPath, encodeURIComponent(file))}">${file}</a></li>`).join('\n\t')}
+				${files.map(file => getFileLinkTemplate(file, webPath)).join('\n\t')}
 			</ul>
 			<address>Modified: ${stats.atime.toLocaleDateString("en-US", {month: "short", day: "2-digit", year: "numeric"})}</address>
 		</div>
@@ -150,6 +151,14 @@ function loadDirectory(req, res, stats, webPath, absoluteSystemPath) {
 		res.writeHead(200, {"Content-Type": "text/html", "Content-Length": output.length});
 		return res.end(output);
 	});
+}
+
+function getFileLinkTemplate(file, webPath) {
+	if (path.extname(file) == ".jpg" || path.extname(file) == ".JPG") {
+		return `<li><span onClick="selectImage('${file}');">${file}</span> <a href="${path.join(webPath, encodeURIComponent(file))}" target="_blank">(open in new tab)</a></li>`
+	} else {
+		return `<li><a href="${path.join(webPath, encodeURIComponent(file))}">${file}</a></li>`;
+	}
 }
 
 /**

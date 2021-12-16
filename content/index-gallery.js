@@ -4,6 +4,11 @@ let cacheDirection = "next";
 const keyCodeN = 78;
 const keyCodeB = 66;
 const keyCodeF = 70;
+const keyCodeLeft = 37;
+const keyCodeUp = 38;
+const keyCodeRight = 39;
+const keyCodeDown = 40;
+
 const images = Array.from(document.querySelectorAll("a[href$='.jpg' i]"));
 
 window.addEventListener("keydown", advanceImage);
@@ -12,12 +17,18 @@ function advanceImage(e) {
    // If some other key was pressed, return.
    let cacheHit = false;
    switch(e.keyCode) {
+			case keyCodeDown:
+			case keyCodeRight:
+				e.preventDefault();
       case keyCodeN:
          imgPointer = (imgPointer + 1) % images.length;
          onDeckImgPointer = (imgPointer + 1) % images.length;
          cacheHit = (cacheDirection == "next");
          cacheDirection = "next";
          break;
+			case keyCodeUp:
+			case keyCodeLeft:
+				e.preventDefault();
       case keyCodeB:
          if (imgPointer == 0) imgPointer = images.length;
          imgPointer = (imgPointer - 1) % images.length;
@@ -74,6 +85,10 @@ function handleClick(e) {
 
 function handleLoadEnd(e) {
    document.querySelector("#gallery").classList.remove("spinner");
+}
+
+function selectImage(name) {
+	console.log(name);
 }
 
 // https://stackoverflow.com/questions/45648886/swipe-left-right-for-a-webpage
