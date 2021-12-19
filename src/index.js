@@ -14,12 +14,7 @@ const path = require('path');
 const auth = require(path.join(__dirname, 'auth.js'));
 const config = require(path.join(__dirname, 'config.js'));
 
-const wwwRoot = config.wwwRoot;
-
-module.exports = function(req, res) {
-	const webPath = path.normalize(decodeURIComponent(url.parse(req.url).pathname));
-	const absoluteSystemPath = path.join(wwwRoot, webPath);
-
+module.exports = function(req, res, root, webPath, absoluteSystemPath) {
 	fs.lstat(absoluteSystemPath, function(err, stats) {
 		if (err) {
 			res.writeHead(404);
@@ -27,11 +22,11 @@ module.exports = function(req, res) {
 		}
 
 		if (stats.isFile()) {
-			auth.authorize(req, res, wwwRoot, path.dirname(absoluteSystemPath), () => {
+			auth.authorize(req, res, root, path.dirname(absoluteSystemPath), () => {
 				loadFile(req, res, stats, absoluteSystemPath);
 			});
 		} else if (stats.isDirectory()) {
-			auth.authorize(req, res, wwwRoot, absoluteSystemPath, () => {
+			auth.authorize(req, res, root, absoluteSystemPath, () => {
 				loadDirectory(req, res, stats, webPath, absoluteSystemPath);
 			})
 		} else {

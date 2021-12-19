@@ -94,7 +94,9 @@ module.exports = (req, res, socket, head) => {
 	}
 
 	// No plugin matches route. Instead, index the directory under content/ specified by the URL path.
-	index(req, res);
+	const webPath = path.normalize(decodeURIComponent(url.parse(req.url).pathname));
+	const absoluteSystemPath = path.join(wwwRoot, webPath);
+	index(req, res, wwwRoot, webPath, absoluteSystemPath);
 }
 
 /**
@@ -118,12 +120,19 @@ const scan = (dir) => {
 			let plugin = require(pluginPath);
 			plugins[pluginPath] = plugin;
 			if (plugin.init) {
-				plugin.init({wwwRoot, auth, log, config});
+				plugin.init({
+					wwwRoot,
+					auth,
+					log,
+					config,
+					getResource: (req, res, resourceName) => index(req, res, pluginRoot, "", path.join(path.dirname(pluginPath), path.basename(pluginPath, '.js'), 'resources', resourceName))
+				});
 			}
 		} else if (
 			stats.isDirectory()
 			&& !pluginPath.includes('node_modules')
 			&& node != 'data'
+			&& node != 'resources'
 		) {
 			/**
 			 * TODO: Hack fix to ignore node modules and app data.
