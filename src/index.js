@@ -73,7 +73,7 @@ function loadFile(req, res, stats, absoluteSystemPath) {
 
 	// Set response headers
 	const responseHeader = {
-		"Cache-Control": "max-age=31536000",
+		"Cache-Control": "max-age=72000",
 		"Content-Type": mimeType,
 		"Content-Length": Number(rangeEnd) === Number(rangeStart) ? 0 : (Number(rangeEnd) + 1) - Number(rangeStart)
 	};
