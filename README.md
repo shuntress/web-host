@@ -1,14 +1,13 @@
 # Web Host
-
-## What is this?
-A web server using Node's built-ins to handle:
+A web server that uses [Node](https://nodejs.org/)'s built-ins to handle:
  - static content (filesystem index)
  - dynamic content (server-side javascript)
  - secure authentication ([HTTP Basic](https://tools.ietf.org/html/rfc7617), [TLS](https://tools.ietf.org/html/rfc8446), [pbkdf2](https://tools.ietf.org/html/rfc8018))
  - simple authorization (No groups, roles, or regex matches)
 
-This is my take on a minimalist web host with code that
-can be fully reviewed in an hour and run directly from
+## What is this?
+It's my take on a practical minimalist web host with code that
+can be understood in an hour and run directly from
 source with no dependencies ([one dependency](https://nodejs.org)).
 
 To that end, you may notice that there are no package, grunt, trevor, cargo,
@@ -20,7 +19,7 @@ The setup script targets [systemd](https://systemd.io/) to install this software
 ## Why?
 Small-scale web publishing should be simple.
 
-A CS degree should not feel required for your self-hosted resume, blog, or photos.
+A CS degree should not feel required to self-host your resume, blog, or photos.
 
 # Quick Start
 **Install Node**: [https://nodejs.org/](https://nodejs.org/)
