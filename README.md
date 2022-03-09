@@ -11,7 +11,7 @@ can be understood in an hour and run directly from
 source with no dependencies ([one dependency](https://nodejs.org)).
 
 To that end, you may notice that there are no package, grunt, trevor, cargo,
-slurp, jarvis, babel, lint, or docker files. The .git folder is the only dev
+slurp, scarf, jarvis, babel, lint, or docker files. The .git folder is the only dev
 tool sub-directory.
 
 The setup script targets [systemd](https://systemd.io/) to install this software as a persistent service but the project is otherwise system-agnostic.
