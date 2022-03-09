@@ -93,7 +93,7 @@ If a list of authorized users exists for a resource that does not have `private`
 ## Firewall Settings
 Networking can easily get overcomplicated.
 
-The extremely simplified and generally "good enough" version is that your house has an internet address similar to its street address and your modem/router is like the mailbox to receive messgaes at your address.
+The extremely simplified and generally "good enough" version is that your house has an internet address similar to its street address and your modem/router is like the mailbox to receive messages at your address.
 
 In order for people outside your home network to access your server, you need to configure the "mailbox" to pass certain correspondence appropriately. Like sending to a specific unit number in a large building.
 
