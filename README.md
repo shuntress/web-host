@@ -19,7 +19,7 @@ The setup script targets [systemd](https://systemd.io/) to install this software
 ## Why?
 Small-scale web publishing should be simple.
 
-A CS degree should not feel required to self-host your resume, blog, or photos.
+A CS degree should not feel necessary for self-hosting your resume, blog, recipes, or photos.
 
 # Quick Start
 **Install Node**: [https://nodejs.org/](https://nodejs.org/)
@@ -91,7 +91,7 @@ If the first `.authorized_users` does not list the user's name, the request will
 If a list of authorized users exists for a resource that does not have `private` in the path, the user will be prompted to login because a name is required for authorization.
 
 ## Firewall Settings
-Networking can easily get overcomplicated.
+Network configuration can easily get overcomplicated.
 
 The extremely simplified and generally "good enough" version is that your house has an internet address similar to its street address and your modem/router is like the mailbox to receive messages at your address.
 
