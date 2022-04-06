@@ -69,7 +69,7 @@ module.exports = (req, res, socket, head) => {
 		const plugin = parts.pop();
 		const pluginPath = path.join(...parts);
 
-		const find = path.join(pluginRoot, pluginPath, plugin + '.js');
+		const find = path.join(pluginRoot, pluginPath, plugin);
 
 		/**
 		 * TODO: Fix this
@@ -108,41 +108,45 @@ module.exports = (req, res, socket, head) => {
  * @param {string} dir Current scan directory
  */
 const scan = (dir) => {
-	// load dir 
+	// load directory
 	const nodes = fs.readdirSync(dir);
 
-	// Check each file, if its a directory append to dir and pass to scan
-	nodes.forEach(node => {
-		const pluginPath = path.join(dir, node);
-		const stats = fs.lstatSync(pluginPath);
-		if (stats.isFile() && path.extname(pluginPath) == ".js") {
-						// If its a file append to plugins
-			let plugin = require(pluginPath);
-			plugins[pluginPath] = plugin;
-			if (plugin.init) {
-				plugin.init({
-					wwwRoot,
-					auth,
-					log,
-					config,
-					getResource: (req, res, resourceName) => index(req, res, pluginRoot, "", path.join(path.dirname(pluginPath), path.basename(pluginPath, '.js'), 'resources', resourceName))
-				});
-			}
-		} else if (
-			stats.isDirectory()
-			&& !pluginPath.includes('node_modules')
-			&& node != 'data'
-			&& node != 'resources'
-		) {
-			/**
-			 * TODO: Hack fix to ignore node modules and app data.
-			 * Flesh this out... better... or something.
-			 */
-			scan(pluginPath);
+	// If this directory contains a file named "plugin.js", then this directory is a plugin
+	//   and should be added to the list.
+	if(nodes.some(node => path.basename(node) === "plugin.js")) {
+		const pluginPath = path.join(dir, "plugin.js");
+		let plugin = require(pluginPath);
+		plugins[dir] = plugin;
+		if (plugin.init) {
+			plugin.init({
+				wwwRoot,
+				auth,
+				log,
+				config,
+				getResource: (req, res, resourceName) => index(req, res, dir, path.join('resources', resourceName), path.join(dir, 'resources', resourceName))
+			});
 		}
-	});
+	} else {
+		// Check each file, if its a directory append to dir and pass to scan
+		nodes.forEach(node => {
+			const nextPath = path.join(dir, node);
+			const stats = fs.lstatSync(nextPath);
+			if (
+				stats.isDirectory()
+				&& node != 'node_modules'
+				&& node != 'data'
+				&& node != 'resources'
+			) {
+				/**
+				 * TODO: Hack fix to ignore node modules and app data.
+				 * Flesh this out... better... or something.
+				 */
+				scan(nextPath);
+			}
+		});
+	}
 };
+
 const plugins = {}; // All modules found by scanning the plugin directory. Key'd on path
 scan(pluginRoot);
 log.info(log.tags('Startup'), `found ${Object.keys(plugins).length} plugin${Object.keys(plugins).length > 1 ? 's' : ''}`);
-

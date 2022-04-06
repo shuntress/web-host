@@ -11,7 +11,7 @@ can be understood in an hour and run directly from
 source with no dependencies ([one dependency](https://nodejs.org)).
 
 To that end, you may notice that there are no package, grunt, trevor, cargo,
-slurp, jarvis, babel, lint, or docker files. The .git folder is the only dev
+slurp, scarf, jarvis, babel, lint, or docker files. The .git folder is the only dev
 tool sub-directory.
 
 The setup script targets [systemd](https://systemd.io/) to install this software as a persistent service but the project is otherwise system-agnostic.
@@ -19,7 +19,7 @@ The setup script targets [systemd](https://systemd.io/) to install this software
 ## Why?
 Small-scale web publishing should be simple.
 
-A CS degree should not feel required to self-host your resume, blog, or photos.
+A CS degree should not feel necessary for self-hosting your resume, blog, recipes, or photos.
 
 # Quick Start
 **Install Node**: [https://nodejs.org/](https://nodejs.org/)
@@ -89,6 +89,17 @@ If the first `.authorized_users` lists the user's name, the request will be **ac
 If the first `.authorized_users` does not list the user's name, the request will be **rejected**.
 
 If a list of authorized users exists for a resource that does not have `private` in the path, the user will be prompted to login because a name is required for authorization.
+
+## Firewall Settings
+Network configuration can easily get overcomplicated.
+
+The extremely simplified and generally "good enough" version is that your house has an internet address similar to its street address and your modem/router is like the mailbox to receive messages at your address.
+
+In order for people outside your home network to access your server, you need to configure the "mailbox" to pass certain correspondence appropriately. Like sending to a specific unit number in a large building.
+
+Specifically, you want inbound and outbound TCP traffic on ports 80 and 443 to go to the machine running your server.
+
+How this is actually accomplished will vary slightly depending on your specific hardware but most commonly this will be done by connecting to [http://192.168.1.1](http://192/168.1.1) and logging in using the credentials printed on a sticker stuck to the side of your ISP-provided router/modem.
 
 ## Configuration Options
 Config defaults are in [src/config.js](https://github.com/shuntress/web-host/blob/main/src/config.js).
