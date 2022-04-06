@@ -135,7 +135,7 @@ function loadDirectory(req, res, stats, webPath, absoluteSystemPath) {
 			</div>
 ` : ""}
 			<ul>
-				${parentWebPath ? `<li><a href="${parentWebPath}">..</a></li>`:''}
+				${parentWebPath ? `<li class="index-link-folder"><a href="${parentWebPath}">⤴</a></li>`:''}
 				${files.map(file => getFileLinkTemplate(file, webPath)).join('\n\t')}
 			</ul>
 			<address>Modified: ${stats.atime.toLocaleDateString("en-US", {month: "short", day: "2-digit", year: "numeric"})}</address>
@@ -149,10 +149,16 @@ function loadDirectory(req, res, stats, webPath, absoluteSystemPath) {
 }
 
 function getFileLinkTemplate(file, webPath) {
+	const url = path.join(webPath, encodeURIComponent(file));
+	const listItemClickTemplate = `onclick="location.href = '${url}';"`;
 	if (path.extname(file) == ".jpg" || path.extname(file) == ".JPG") {
-		return `<li><span onClick="selectImage('${file}');">${file}</span> <a href="${path.join(webPath, encodeURIComponent(file))}" target="_blank">(open in new tab)</a></li>`
-	} else {
-		return `<li><a href="${path.join(webPath, encodeURIComponent(file))}">${file}</a></li>`;
+		return `<li class="index-link-image" ${listItemClickTemplate}><span onClick="selectImage('${file}');">${file}</span> <a href="${url}" target="_blank">(open in new tab)</a></li>`
+	} else if (path.extname(file) == "") {
+		return `<li class="index-link-folder" ${listItemClickTemplate}><a href="${url}">${file}</a></li>`;
+
+	}
+	else {
+		return `<li class="index-link-file" ${listItemClickTemplate}><a href="${url}">${file}</a></li>`;
 	}
 }
 
