@@ -40,10 +40,11 @@
     left: 0;
     display: flex;
     justify-content: center;
+		background: rgba(100, 100, 100, 0.9);
 		z-index: 1;
 }
 
 .fullscreen > img {
-	margin: 1em;
+	object-fit: contain;
 }
 

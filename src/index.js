@@ -114,8 +114,9 @@ function loadDirectory(req, res, stats, webPath, absoluteSystemPath) {
 		const parentWebPath = path.dirname(webPath);
 		const images = files.filter(file => path.extname(file) === '.jpg' || path.extname(file) === '.JPG');
 		const output =
-`<html>
-<meta charset="UTF-8">
+`<!DOCTYPE html>
+<html>
+	<meta charset="UTF-8">
 	<head>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<link rel="stylesheet" href="/style.css">
@@ -135,7 +136,7 @@ function loadDirectory(req, res, stats, webPath, absoluteSystemPath) {
 			</div>
 ` : ""}
 			<ul>
-				${parentWebPath ? `<li class="index-link-folder"><a href="${parentWebPath}">⤴</a></li>`:''}
+				${parentWebPath ? `<li class="index-link-folder" onclick="location.href = '${parentWebPath}';"><a href="${parentWebPath}">⤴</a></li>`:''}
 				${files.map(file => getFileLinkTemplate(file, webPath)).join('\n\t')}
 			</ul>
 			<address>Modified: ${stats.atime.toLocaleDateString("en-US", {month: "short", day: "2-digit", year: "numeric"})}</address>
@@ -143,7 +144,7 @@ function loadDirectory(req, res, stats, webPath, absoluteSystemPath) {
 		<script src="/index-gallery.js"></script>
 	</body>
 </html>`;
-		res.writeHead(200, {"Content-Type": "text/html", "Content-Length": output.length});
+		res.writeHead(200, {"Content-Type": "text/html; charset=utf-8", "Content-Length": output.length});
 		return res.end(output);
 	});
 }
