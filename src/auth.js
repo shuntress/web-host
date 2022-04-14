@@ -56,7 +56,7 @@ catch (err) {
 }
 
 // Parse user credentials into memory
-const authorized_credentials = users.split(os.EOL).filter(row => row.length > 3).map(row => {
+const authorized_credentials = users.split('\n').filter(row => row.length > 3).map(row => row.trim()).map(row => {
 	if (row.length > 300) log.warning(log.tag('Auth'), `Abnormally long user record. Potentially malicious user input or mistakenly missing line break. Check ${pathToUserCredentials}`);
 	const parts = row.split(' ');
 	return { name: parts[0], salt: parts[1], pwHash: parts[2], locked: Boolean(parts[3])};
