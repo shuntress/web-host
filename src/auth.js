@@ -121,6 +121,10 @@ module.exports.authenticate = function authorize(req, res, callback) {
 					// At the root, no auth file found. Default to open.
 					callback();
 				} else {
+					// TODO: Add a check here to prevent infinite loops and consider a
+					//       redesign to make using this function easier in plugins.
+					//
+					//       End condition: checkpath === path.dirname(checkpath)
 					checkAuthorization(req, res, root, path.dirname(checkPath), callback);
 				}
 				return;

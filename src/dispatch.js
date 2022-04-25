@@ -113,6 +113,8 @@ const scan = (dir) => {
 
 	// If this directory contains a file named "plugin.js", then this directory is a plugin
 	//   and should be added to the list.
+
+	// TODO: Fix what happens when plugin.js is found in the plugin root.
 	if(nodes.some(node => path.basename(node) === "plugin.js")) {
 		const pluginPath = path.join(dir, "plugin.js");
 		let plugin = require(pluginPath);
