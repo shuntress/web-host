@@ -64,6 +64,10 @@ module.exports.dispatch = (req, res, socket, head) => {
 			// The auth module handles account creation
 			auth.sendAccountForm(req, res);
 			return;
+		case 'map':
+			res.writeHead(302, {location: "/map.html"});
+			res.end();
+			return;
 	}
 
 	if (parts.length > 1) {

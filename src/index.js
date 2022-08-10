@@ -180,7 +180,7 @@ const mimeMap = {
 	".jpeg": "image/jpeg",
 	".gif": "image/gif",
 	".png": "image/png",
-	".css": "text/css",
+	".css": "text/css; charset=utf-8",
 	".svg": "image/svg+xml",
 	".md": "text/markdown",
 	".markdown": "text/markdown",
