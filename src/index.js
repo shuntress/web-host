@@ -12,13 +12,14 @@ const url = require('url');
 const path = require('path');
 
 const auth = require(path.join(__dirname, 'auth.js'));
+const route = require(path.join(__dirname, 'route.js'));
+const log = require(path.join(__dirname, 'log.js'));
 const config = require(path.join(__dirname, 'config.js'));
 
 module.exports = function(req, res, root, webPath, absoluteSystemPath) {
 	fs.lstat(absoluteSystemPath, function(err, stats) {
 		if (err) {
-			res.writeHead(404);
-			return res.end("404 Not Found");
+			return route.sendNotFound(req, res);
 		}
 
 		if (stats.isFile()) {
@@ -30,8 +31,7 @@ module.exports = function(req, res, root, webPath, absoluteSystemPath) {
 				loadDirectory(req, res, stats, webPath, absoluteSystemPath);
 			})
 		} else {
-			res.writeHead(404);
-			return res.end("404 Not Found");
+			return route.sendNotFound(req, res);
 		}
 	});
 }
@@ -67,8 +67,7 @@ function loadFile(req, res, stats, absoluteSystemPath) {
 	// Load file content
 	dataStream = fs.createReadStream(absoluteSystemPath, {start: Number(rangeStart), end: Number(rangeEnd)});
 	dataStream.on('error', function(){
-		res.writeHead(404);
-		return res.end("404 Not Found");
+		return route.sendNotFound(req, res);
 	});
 
 	// Set response headers

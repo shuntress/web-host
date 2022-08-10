@@ -55,6 +55,9 @@ module.exports.pathToUserAccountRequests = config?.pathToUserAccountRequests ?? 
 // as real accounts.
 module.exports.totalUsernameLimit = config?.totalUsernameLimit ?? 200;
 
+// Experimental
+module.exports.clusterNodes = config?.clusterNodes ?? [];
+
 // placeholder for arbitrary configuration
 module.exports.custom = config?.custom;
 

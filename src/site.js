@@ -12,6 +12,7 @@
  */
 const path = require('path');
 const fs = require('fs');
+const tls = require('tls');
 const https = require('https');
 const http = require('http');
 
@@ -20,7 +21,7 @@ const http = require('http');
  */
 const auth = require(path.join(__dirname, 'auth.js'));
 const log = require(path.join(__dirname, 'log.js'));
-const dispatch = require(path.join(__dirname, 'dispatch.js'));
+const dispatch = require(path.join(__dirname, 'route.js')).dispatch;
 const config = require(path.join(__dirname, 'config.js'));
 
 /**
