@@ -72,10 +72,12 @@ module.exports.dispatch = (req, res, socket, head) => {
 	if (parts.length > 1) {
 		const find = path.join(pluginRoot, parts.join(path.sep));
 
+		// TODO: Refactor this to make it less gross.
 		let matchKey = "";
 		let matches = Object.keys(plugins).filter(pluginPath => {
-			matchKey = pluginPath;
-			return find.startsWith(pluginPath);
+			let filterMatch = find.startsWith(pluginPath);
+			if(filterMatch) matchKey = pluginPath;
+			return filterMatch;
 		});
 
 		if(matches.length > 0) {
