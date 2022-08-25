@@ -39,8 +39,12 @@ const httpServer = http.createServer(function (req, res) {
 	} else {
 		log.info(log.tags('Request', httpPort, req.method), JSON.stringify({user: auth.currentUser(req), from: req.socket.remoteAddress, for: `${req.headers.host}${req.url}`}));
 
-		// Auth is not used here because HTTPS is required in order to transfer passwords securely.
-		dispatch(req, res);
+		/** auth.js will abort requests for protected resources because
+		 *   HTTPS is required in order to securely transfer credentials.
+		 **/
+		auth.authenticate(req, res, () => {
+			dispatch(req, res);
+		});
 	}
 });
 httpServer.listen(httpPort);

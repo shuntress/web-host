@@ -10,7 +10,6 @@ const fs = require('fs');
 const path = require('path');
 const url = require('url');
 const https = require('https');
-const { runInNewContext } = require('vm');
 
 const auth = require(path.join(__dirname, 'auth.js'));
 const log = require(path.join(__dirname, 'log.js'));
@@ -71,30 +70,41 @@ module.exports.dispatch = (req, res, socket, head) => {
 	}
 
 	if (parts.length > 1) {
-		const action = parts.pop();
-		const plugin = parts.pop();
-		const pluginPath = path.join(...parts);
+		const find = path.join(pluginRoot, parts.join(path.sep));
 
-		const find = path.join(pluginRoot, pluginPath, plugin);
+		let matchKey = "";
+		let matches = Object.keys(plugins).filter(pluginPath => {
+			matchKey = pluginPath;
+			return find.startsWith(pluginPath);
+		});
 
-		/**
-		 * TODO: Fix this
-		 * If someone tries to run the init action, just abort.
-		 * Maybe figure out a better fix for this that allows plugins
-		 * to have a real action called init and correctly hides the framework
-		 * init from access.
-		 */
-		if (action == 'init') return false;
+		if(matches.length > 0) {
+			let match = matches.pop();
 
-		// check for plugin in plugin collection
-		if (action && plugin && pluginPath) {
-			if (plugins[find]) {
-				if (plugins[find][action]) {
-					const query = Array.from(parsedUrl.searchParams.keys()).reduce((a, k) => { return Object.assign({ [k]: parsedUrl.searchParams.get(k) }, a); }, {});
-					log.info(log.tags('Routing'), `dispatching request for ${action} on ${plugin} in ${pluginPath} with ${JSON.stringify(query)}`);
-					plugins[find][action](req, res, query);
-					return;
-				}
+			let plugin = matchKey.split(path.sep).pop();
+
+			let p = find.replace(matchKey, "").split(path.sep).filter(part => part);
+
+			if (p.length > 0) {
+				p.reverse();
+				let action = p.pop();
+				p.reverse();
+				let leftoverPath = p.join("/");
+
+				/**
+				 * TODO: Fix this
+				 * If someone tries to run the init action, just abort.
+				 * Maybe figure out a better fix for this that allows plugins
+				 * to have a real action called init and correctly hides the framework
+				 * init from access.
+				 */
+				if (action == 'init') return false;
+
+				const pluginPath = match.replace(pluginRoot, "");
+				const query = Array.from(parsedUrl.searchParams.keys()).reduce((a, k) => { return Object.assign({ [k]: parsedUrl.searchParams.get(k) }, a); }, {});
+				log.info(log.tags('Routing'), `dispatching request for ${action} on ${plugin} with ${leftoverPath} ${JSON.stringify(query)}`);
+				plugins[match][action](req, res, query, pluginPath, leftoverPath);
+				return;
 			}
 		}
 	}

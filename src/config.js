@@ -27,6 +27,9 @@ module.exports.serverCertificatePath = config?.serverCertificatePath ?? path.joi
 // Port to listen for HTTPS requests
 module.exports.httpsPort = config?.httpsPort ?? 443;
 
+// Never set this to true it's a bad setting. It's just for a poorly designed dev thing.
+module.exports.ignoreSecurity = config?.ignoreSecurity ?? false;
+
 // Path to temporary log duplicates file
 module.exports.dailyLogFile =  path.join(__dirname, '..', 'administration', 'dailies.log');
 

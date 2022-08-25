@@ -97,7 +97,11 @@ module.exports.authenticate = function authorize(req, res, callback) {
 		callback();
 		return;
 	} else {
-		validateCredentials(req, res, callback);
+		if(config.useHttps) {
+			validateCredentials(req, res, callback);
+		} else {
+			module.exports.sendSecurityWarning(req, res, callback);
+		}
 	}
 };
 
@@ -228,6 +232,27 @@ module.exports.sendAccountForm = (req, res) => {
 			}
 		});
 	}
+}
+
+/**
+ * Handle sending/receiving the new account request form.
+ */
+ module.exports.sendSecurityWarning = (req, res, callback) => {
+	if (config.ignoreSecurity) {
+		validateCredentials(req, res, callback);
+		return;
+	}
+
+	res.writeHead(200, { 'Content-Type': 'text/html' });
+	res.end(`
+<html>
+	<body>
+		<p>HTTPS is required to securely transfer account credentials.</p>
+
+		<p>This should be enabled in administration/config.json by adding <code>"useHttps": "true"<code></p>
+	</body>
+</html>
+`);
 }
 
 /**
