@@ -165,7 +165,7 @@ module.exports.sendStatusPage = (_req, res) => {
 			return out;
 		};
 
-		const getPageHitsList = () => {
+		const getHourlyPageHitsList = () => {
 			let out = '';
 			// HACK: helps render a more readable output in a relatively concise way but should be improved.
 			timeNameSequence = ["Midnight", "Noon", "Noon"];
@@ -188,6 +188,29 @@ module.exports.sendStatusPage = (_req, res) => {
 					out += '</li>\n';
 				});
 			out += '</ol>\n';
+
+			return out;
+		};
+
+		const getPageHitsList = () => {
+			let out = '';
+
+			out += '<ul>\n';
+			
+			// hours: { pages: {[page name: string]: number}}
+			//   Flatten pages
+			const pages = Object.values(hours).reduce((acc, hour) => {
+				Object.keys(hour.pages).forEach(page => {
+					if (acc[page] === undefined) acc[page] = {count: 0, users: []};
+					acc[page].count += hour.pages[page];
+				});
+				return acc;
+			}, {});
+
+			Object.keys(pages)
+				.sort((a,b) => pages[b] - pages[a])
+				.map(page => `<li>${path.dirname(page)} <b>${decodeURIComponent(path.basename(page))}</b>: <strong>${pages[page]}</strong></li>\r\n`)
+				.forEach(item => out+=item);
 
 			return out;
 		};
