@@ -17,7 +17,7 @@ let initialized = false;
 module.exports = (...args) => {
 	console.log(...args);
 
-	if(initialized) {
+	if (initialized) {
 		const now = Date.now();
 		turnoverDaily(now);
 
@@ -35,7 +35,7 @@ module.exports.tag = module.exports.tags;
 const config = require(path.join(__dirname, 'config.js'));
 
 const dailyLogFile = config.dailyLogFile;
-let dailies = fs.createWriteStream(dailyLogFile, {flags: 'a+'});
+let dailies = fs.createWriteStream(dailyLogFile, { flags: 'a+' });
 
 // HACK: Set a fake timestamp that can't be old enough to delete the dailies
 // while things log during initialization. This prevents an error caused by
@@ -56,7 +56,7 @@ const rl = readline.createInterface({
 	currentOldestTimestamp = oldestDailyEntry.split(' ')[0];
 	turnoverDaily(Date.now());
 }).on('close', () => {
-	initialized=true;
+	initialized = true;
 });
 
 /**
@@ -67,12 +67,12 @@ const rl = readline.createInterface({
  */
 function turnoverDaily(now) {
 	const todaysMidnight = new Date(now);
-	todaysMidnight.setHours(0,0,0,0);
+	todaysMidnight.setHours(0, 0, 0, 0);
 
 	if (currentOldestTimestamp < todaysMidnight.getTime()) {
 		// Clear the log when oldest entry is from before the most recent midnight.
 		dailies.close();
-		dailies = fs.createWriteStream(dailyLogFile, {flags: 'w'});
+		dailies = fs.createWriteStream(dailyLogFile, { flags: 'w' });
 		currentOldestTimestamp = now;
 		module.exports.info('Turnover dailies.')
 	}
@@ -89,23 +89,24 @@ function turnoverDaily(now) {
  */
 module.exports.sendStatusPage = (_req, res) => {
 	const hours = {};
-	for(let hour=0; hour < 24; hour++)
-		hours[hour]={
-			users: {},
+	for (let hour = 0; hour < 24; hour++)
+		hours[hour] = {
 			pages: {},
+			users: {},
+			ips: {},
 			total: 0,
 		};
 	readline.createInterface({
 		input: fs.createReadStream(dailyLogFile)
 	}).on('line', line => {
 		let parts = line.split(' ');
-		const timestamp = Number(parts.splice(0,1)[0]);
-		const _logLevel = parts.splice(0,1)[0];
+		const timestamp = Number(parts.splice(0, 1)[0]);
+		const _logLevel = parts.splice(0, 1)[0];
 		let message = parts.join(' ').trim();
 		const tags = [];
 		let tagOpen = message.indexOf('(');
 		let tagClose = message.indexOf(')');
-		while(tagOpen == 0 && tagOpen < tagClose) {
+		while (tagOpen == 0 && tagOpen < tagClose) {
 			let tag = message.substring(tagOpen, tagClose + 1);
 			tags.push(tag.substring(1, tag.length - 1));
 			message = message.replace(tag, '').trim();
@@ -119,24 +120,27 @@ module.exports.sendStatusPage = (_req, res) => {
 			let data = JSON.parse(message);
 
 			let hour = hours[date.getHours()];
-			if(!hours[date.getHours()].pages[data.for]) hours[date.getHours()].pages[data.for] = 0;
+			if (!hours[date.getHours()].pages[data.for]) hours[date.getHours()].pages[data.for] = 0;
 			hours[date.getHours()].pages[data.for]++
 			hours[date.getHours()].total++;
 
-			if(!hour.users[data.from]) hour.users[data.from] = 0;
-			hour.users[data.from]++;
+			if (!hour.users[data.user]) hour.users[data.user] = 0;
+			hour.users[data.user]++;
+
+			if (!hour.ips[data.from]) hour.ips[data.from] = 0;
+			hour.ips[data.from]++;
 		}
 	}).on('close', () => {
-		const bottomChar='&#x2500', wallChar='&#x2551', barChar='&#x2588', markerChar='&#x2506';
-		let bottomLine='';
+		const bottomChar = '&#x2500', wallChar = '&#x2551', barChar = '&#x2588', markerChar = '&#x2506';
+		let bottomLine = '';
 
-		for(var i=0;i<32;i++) {
-			if (i==4) {
-				bottomLine+="&#x2568"
-			} else if (i==31) {
-				bottomLine+="&#x255C";
+		for (var i = 0; i < 32; i++) {
+			if (i == 4) {
+				bottomLine += "&#x2568"
+			} else if (i == 31) {
+				bottomLine += "&#x255C";
 			} else {
-				bottomLine+=bottomChar;
+				bottomLine += bottomChar;
 			}
 		}
 
@@ -151,14 +155,14 @@ module.exports.sendStatusPage = (_req, res) => {
 			let out = '';
 			out += '<div class="graph">\t<pre>';
 			out += '    &#x2553;&#x2500;&#x2500;&#x2500; Requests Per Hour &#x2500;&#x2500;&#x2500;&#x2500;&#x2556;\n';
-			for(var i=10;i>0;i--) {
+			for (var i = 10; i > 0; i--) {
 				let row = Object.keys(hours).reduce((line, hour) => {
 					if (hours[hour].total > line.label) line.label = hours[hour].total;
-					line.data += (((hours[hour].total*100) / max) >= (i*10)) ? barChar : ((hour == thisHour) ? `<span style="color: red">${markerChar}</span>` : ' ');
+					line.data += (((hours[hour].total * 100) / max) >= (i * 10)) ? barChar : ((hour == thisHour) ? `<span style="color: red">${markerChar}</span>` : ' ');
 					return line;
-				}, {data: '', label: 0});
-				let scale = Math.trunc(row.label/(11-i));
-				out += `${(i==10||i==1?scale:"").toString().padEnd(4, ' ')}${wallChar} ${row.data} ${wallChar}`+ '\n';
+				}, { data: '', label: 0 });
+				let scale = Math.trunc(row.label / (11 - i));
+				out += `${(i == 10 || i == 1 ? scale : "").toString().padEnd(4, ' ')}${wallChar} ${row.data} ${wallChar}` + '\n';
 			}
 			out += bottomLine;
 			out += '</pre>\n</div>\n';
@@ -172,21 +176,24 @@ module.exports.sendStatusPage = (_req, res) => {
 			timeNameIndex = 0;
 			out += '<ol>\n';
 			// Build "details" data
-				Object.keys(hours).forEach(h => {
-					let hour=hours[h];
-					h = Number(h);
-					hour.start = h % 12 || timeNameSequence[timeNameIndex++ % timeNameSequence.length];
-					hour.end = (h + 1) % 12 || timeNameSequence[timeNameIndex++ % timeNameSequence.length];;
-					let digitCount = 0;
-					if (hour.pages[0]) digitCount = hour.pages[0].length;
-					out += '<li>\n';
-					out += `<div ${hour.total > 0 ? 'class="caret"' : ''}>${h > thisHour || hour.total === 0 ? '<span class="de-emphasized">' : ''}<b>${hour.start}${h % 12 ? ':00' : ''}</b> - ${h == thisHour ? '<span class="now">' : ''}<b>${hour.end}${(h + 1) % 12 ? ':00' : ''}</b>${ timeNameSequence.includes(hour.end) ? '' : `${(h + 1) < 12 ? "<em>am</em>" : "<em>pm</em>" }`}${h == thisHour ? '</span>' : ''}${h > thisHour ? '' : ` &#x2014; <strong>${hour.total}</strong> hits for ${Object.keys(hour.pages).length} pages from ${Object.keys(hour.users).length} IPs`}${h+1 < thisHour ? '</span>' : ''}</div>\n`;
-					out += '<ol class="nested">\n';
-					// TODO: Add a "Total redirects" stat for http->https redirects
-					out += Object.keys(hour.pages).map(key => ({page: key, hits: hour.pages[key]})).sort((a,b) => b.hits - a.hits).map(({page, hits}) => `<li>${hits.toString().padStart(digitCount, ' ')}: ${page}</li>`).join('\n');
-					out += '</ol>\n';
-					out += '</li>\n';
-				});
+			Object.keys(hours).forEach(h => {
+				let hour = hours[h];
+				h = Number(h);
+				hour.start = h % 12 || timeNameSequence[timeNameIndex++ % timeNameSequence.length];
+				hour.end = (h + 1) % 12 || timeNameSequence[timeNameIndex++ % timeNameSequence.length];;
+				let digitCount = 0;
+				if (hour.pages[0]) digitCount = hour.pages[0].length;
+				out += '<li>\n';
+				out += `<div ${hour.total > 0 ? 'class="caret"' : ''}>${h > thisHour || hour.total === 0 ? '<span class="de-emphasized">' : ''}<b>${hour.start}${h % 12 ? ':00' : ''}</b> - ${h == thisHour ? '<span class="now">' : ''}<b>${hour.end}${(h + 1) % 12 ? ':00' : ''}</b>${timeNameSequence.includes(hour.end) ? '' : `${(h + 1) < 12 ? "<em>am</em>" : "<em>pm</em>"}`}${h == thisHour ? '</span>' : ''}${h > thisHour ? '' : ` &#x2014; <strong>${hour.total}</strong> hits for ${Object.keys(hour.pages).length} pages from ${Object.keys(hour.users).length} IPs`}${h + 1 < thisHour ? '</span>' : ''}</div>\n`;
+				out += '<ol class="nested">\n';
+				// TODO: Add a "Total redirects" stat for http->https redirects
+				out += Object.keys(hour.pages)
+					.map(key => ({ page: key, hits: hour.pages[key] }))
+					.sort((a, b) => b.hits - a.hits)
+					.map(({ page, hits }) => `<li>${hits.toString().padStart(digitCount, ' ')}: ${page}</li>`).join('\n');
+				out += '</ol>\n';
+				out += '</li>\n';
+			});
 			out += '</ol>\n';
 
 			return out;
@@ -196,27 +203,43 @@ module.exports.sendStatusPage = (_req, res) => {
 			let out = '';
 
 			out += '<ul>\n';
-			
-			// hours: { pages: {[page name: string]: number}}
+
+			// hours: [{ pages: {[page name: string]: number}}]
 			//   Flatten pages
 			const pages = Object.values(hours).reduce((acc, hour) => {
 				Object.keys(hour.pages).forEach(page => {
-					if (acc[page] === undefined) acc[page] = {count: 0, users: []};
+					if (acc[page] === undefined) acc[page] = { count: 0 };
 					acc[page].count += hour.pages[page];
 				});
 				return acc;
 			}, {});
 
 			Object.keys(pages)
-				.sort((a,b) => pages[b] - pages[a])
-				.map(page => `<li>${path.dirname(page)} <b>${decodeURIComponent(path.basename(page))}</b>: <strong>${pages[page]}</strong></li>\r\n`)
-				.forEach(item => out+=item);
-
+				.sort((a, b) => pages[b] - pages[a])
+				.map(page => `<li>${path.dirname(page)} <b>${decodeURIComponent(path.basename(page))}</b>: <strong>${pages[page].count}</strong></li>\r\n`)
+				.forEach(item => out += item);
+			out += '</ul>\n';
 			return out;
 		};
 
-		const getUsers = () => {
-			return "";
+		const getUserHitList = () => {
+			let out = '<div>';
+			//const users = [].concat(...Object.values(hours).map(hour => Object.keys(hour.users)));
+			const users = Object.values(hours).reduce((acc, hour) => {
+				Object.keys(hour.users).forEach(user => {
+					if (acc[user] === undefined) acc[user] = { count: 0 };
+					acc[user].count += hour.users[user];
+				});
+				return acc;
+			}, {});
+
+			Object.keys(users)
+			.sort((a, b) => users[b] - users[a])
+			.map(user => `(<span><strong>${user}</strong> <b>${users[user].count}</b></span>) \r\n`)
+			.forEach(item => out += item);
+
+			out += '</div>';
+			return out;
 		}
 
 		const pageTemplate = `<!DOCTYPE html>
@@ -311,21 +334,24 @@ module.exports.sendStatusPage = (_req, res) => {
 	</head>
 	<body>
 			<div class="status-stamp">
-				<h3>${(new Date(Date.now())).toLocaleDateString("en-US", {month: "short", day: "2-digit", year: "numeric", hour: "numeric", minute: "numeric"})}</h3>
+				<h3>${(new Date(Date.now())).toLocaleDateString("en-US", { month: "short", day: "2-digit", year: "numeric", hour: "numeric", minute: "numeric" })}</h3>
 				<div>
-				<div>
-					Load Avg. ${os.loadavg().map(o => `<strong>${o}</strong>`).join(' &#x2014; ')} <em>(over 1 &#x2014 5 &#x2014 15 minutes)</em>
+					<div>
+						Load Avg. ${os.loadavg().map(o => `<strong>${o}</strong>`).join(' &#x2014; ')} <em>(over 1 &#x2014 5 &#x2014 15 minutes)</em>
+					</div>
+					<div>
+						Mem. <strong>${(os.freemem() / Math.pow(1024, 3)).toFixed(2)}</strong> / <strong>${(os.totalmem() / Math.pow(1024, 3)).toFixed(2)}</strong> GiB <em>(free / total)</em>
+					</div>
+					<div>
+						Up for <strong>${Math.trunc(os.uptime() / 86400)}</strong> days
+					</div>
 				</div>
-				<div>
-					Mem. <strong>${(os.freemem()/Math.pow(1024, 3)).toFixed(2)}</strong> / <strong>${(os.totalmem()/Math.pow(1024,3)).toFixed(2)}</strong> GiB <em>(free / total)</em>
-				</div>
-				<div>
-					Up for <strong>${Math.trunc(os.uptime() / 86400)}</strong> days
-				</div>
+				${getPageHitsGraph()}
 			</div>
-			${getPageHitsGraph()}
+			<div>
+				${getUserHitList()}
+				${getPageHitsList()}
 			</div>
-			${getPageHitsList()}
 		<script>
 			var toggler = document.getElementsByClassName("caret");
 			var i;
@@ -340,7 +366,7 @@ module.exports.sendStatusPage = (_req, res) => {
 	</body>
 </html>
 `;
-		res.writeHead("200", {"Content-Type": "text/html", "Content-Length": pageTemplate.length});
+		res.writeHead("200", { "Content-Type": "text/html", "Content-Length": pageTemplate.length });
 		res.end(pageTemplate);
 	});
 }
