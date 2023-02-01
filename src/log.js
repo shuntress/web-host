@@ -55,7 +55,7 @@ const rl = readline.createInterface({
 
 	currentOldestTimestamp = oldestDailyEntry.split(' ')[0];
 	turnoverDaily(Date.now());
-
+}).on('close', () => {
 	initialized=true;
 });
 
