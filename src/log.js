@@ -89,6 +89,7 @@ function turnoverDaily(now) {
  */
 module.exports.sendStatusPage = (_req, res) => {
 	const hours = {};
+	const flatData = [];
 	for (let hour = 0; hour < 24; hour++)
 		hours[hour] = {
 			pages: {},
@@ -118,6 +119,9 @@ module.exports.sendStatusPage = (_req, res) => {
 		if (tags.includes('Request')) {
 			let date = new Date(timestamp);
 			let data = JSON.parse(message);
+
+			// Pull out flat data for arbitrary later processing.
+			flatData.push(data);
 
 			let hour = hours[date.getHours()];
 			if (!hours[date.getHours()].pages[data.for]) hours[date.getHours()].pages[data.for] = 0;
@@ -202,7 +206,7 @@ module.exports.sendStatusPage = (_req, res) => {
 		const getPageHitsList = () => {
 			let out = '';
 
-			out += '<ul>\n';
+			out += '<ol>\n';
 
 			// hours: [{ pages: {[page name: string]: number}}]
 			//   Flatten pages
@@ -214,11 +218,37 @@ module.exports.sendStatusPage = (_req, res) => {
 				return acc;
 			}, {});
 
-			Object.keys(pages)
-				.sort((a, b) => pages[b] - pages[a])
-				.map(page => `<li>${path.dirname(page)} <b>${decodeURIComponent(path.basename(page))}</b>: <strong>${pages[page].count}</strong></li>\r\n`)
-				.forEach(item => out += item);
-			out += '</ul>\n';
+			/**
+			 *	Flat data comes in with "user", "from", and "for" (and sometimes "redirectTo") fields.
+			 *  Organize this by page and user for display
+			 **/
+			flatData
+				.reduce((acc, request) => {
+					let userData = acc.find(entry => entry.user === request.user);
+					if (!userData) {
+						userData = {user: request.user, data: []};
+						acc.push(userData);
+					}
+					userData.data.push(request);
+					return acc;
+				}, [])
+				.map(userData => {
+					let userPageCounts = userData.data.reduce((acc, pageRecord) => {
+						let pageCounter = acc.find(entry => entry.page === pageRecord.for);
+						if(!pageCounter) {
+							pageCounter = {page: pageRecord.for, count: 0};
+							acc.push(pageCounter);
+						}
+						pageCounter.count++;
+						return acc;
+					}, [])
+					.sort((a,b) => b.count - a.count);
+					let userTotal = userPageCounts.reduce((acc, page) => acc + page.count, 0);
+
+					return `<li><span class="caret"><strong>${userData.user}</strong> (<b>${userTotal}</b>)</span><ol class="nested">${userPageCounts.map(page => `<li title="${decodeURIComponent(page.page)}"><b>${decodeURIComponent(path.basename(page.page))}</b>: <strong>${page.count}</strong></li>`).join('\r\n')}</ol></li>`;
+				}).forEach(item => out += item);
+
+			out += '</ol>\n';
 			return out;
 		};
 
@@ -247,11 +277,23 @@ module.exports.sendStatusPage = (_req, res) => {
 	<head>
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<!--
+			https://stackoverflow.com/questions/65907934/html-pre-tag-contents-resizing-on-android
+			https://stackoverflow.com/questions/34732718/why-isnt-there-a-font-that-contains-all-unicode-glyphs
+
+			I don't like including this but I can't find a simpler way to get consistent spacing across browsers and devices.
+		-->
+		<link rel="stylesheet" media="screen" href="https://fontlibrary.org/face/dejavu-sans-mono" type="text/css">
 		<title>Today So Far</title>
 		<style>
+			pre {
+				font-family: DejaVuSansMonoBook;
+			}
+
 			body {
 				display: flex;
-				flex-wrap: wrap;
+				flex-direction: column;
+				gap: .25rem;
 				justify-content: center;
 				align-content: center;
 			}
@@ -264,10 +306,10 @@ module.exports.sendStatusPage = (_req, res) => {
 			}
 
 			.status-stamp {
-				width: 4in;
-				height: 3.25in;
+				margin: .5 rem;
 				padding: 0 1rem;
 				border: 1px solid black;
+				align-self: center;
 			}
 
 			.status-stamp > h3 {
@@ -277,7 +319,8 @@ module.exports.sendStatusPage = (_req, res) => {
 
 			ol {
 				line-break: anywhere;
-				width: 4in;
+				align-self: center;
+				padding-left: 0;
 			}
 
 			strong {
@@ -291,6 +334,12 @@ module.exports.sendStatusPage = (_req, res) => {
 
 			.now {
 				color: red;
+			}
+
+			.page-hits {
+				display: flex;
+				flex-direction: column;
+				gap: .25rem;
 			}
 		</style>
 
@@ -348,8 +397,7 @@ module.exports.sendStatusPage = (_req, res) => {
 				</div>
 				${getPageHitsGraph()}
 			</div>
-			<div>
-				${getUserHitList()}
+			<div class="page-hits">
 				${getPageHitsList()}
 			</div>
 		<script>
