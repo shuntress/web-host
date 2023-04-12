@@ -33,11 +33,13 @@ const httpPort = config.httpPort;
 const httpServer = http.createServer(function (req, res) {
 	if (config.useHttps) {
 		let redirectLocation = "https://" + (req.headers.host ?? '') + (req.url ?? '');
-		log.info(log.tags('Request', httpPort, req.method, 'Redirect'), JSON.stringify({user: auth.currentUser(req), from: req.socket.remoteAddress, for: `${req.headers.host}${req.url}`, redirectTo: redirectLocation}));
+		let logData = JSON.stringify({port: httpPort, method: req.method, user: auth.currentUser(req), from: req.socket.remoteAddress, for: `${req.headers.host}${req.url}`, redirectTo: redirectLocation});
+		log.info(log.tags(log.ansi(auth.currentUser(req), log.ansi.magenta, log.ansi.bold), 'Request', log.ansi(decodeURIComponent(path.basename(req.url)), log.ansi.blue), log.ansi('Redirect', log.ansi.green)), decodeURIComponent(req.url), log.ansi(logData, log.ansi.conceal));
 		res.writeHead(302, {'Location': redirectLocation});
 		res.end();
 	} else {
-		log.info(log.tags('Request', httpPort, req.method), JSON.stringify({user: auth.currentUser(req), from: req.socket.remoteAddress, for: `${req.headers.host}${req.url}`}));
+		let logData = JSON.stringify({port: httpPort, method: req.method, user: auth.currentUser(req), from: req.socket.remoteAddress, for: `${req.headers.host}${req.url}`});
+		log.info(log.tags(log.ansi(auth.currentUser(req), log.ansi.magenta, log.ansi.bold), 'Request', log.ansi(decodeURIComponent(path.basename(req.url)), log.ansi.blue)), decodeURIComponent(req.url), log.ansi(logData, log.ansi.conceal));
 
 		/** auth.js will abort requests for protected resources because
 		 *   HTTPS is required in order to securely transfer credentials.
@@ -76,7 +78,8 @@ if (config.useHttps) {
 	 */
 	const httpsPort = config.httpsPort;
 	const httpsServer = https.createServer(httpsOptions, function (req, res) {
-		log.info(log.tags('Request', httpsPort, req.method), JSON.stringify({user: auth.currentUser(req) ?? "no user info", from: req.socket.remoteAddress, for: `${req.headers.host}${req.url}`}));
+		let logData = JSON.stringify({port: httpsPort, method: req.method, user: auth.currentUser(req) ?? "no user info", from: req.socket.remoteAddress, for: `${req.headers.host}${req.url}`});
+		log.info(log.tags(log.ansi(auth.currentUser(req), log.ansi.magenta, log.ansi.bold), 'Request', log.ansi(decodeURIComponent(path.basename(req.url)), log.ansi.blue)), decodeURIComponent(req.url), log.ansi(logData, log.ansi.conceal));
 
 		/**
 		 * auth.js checks for valid credentials in the authentication header. It
@@ -87,7 +90,7 @@ if (config.useHttps) {
 			dispatch(req, res);
 		});
 	});
-	httpsServer.on('upgrade', (req, socket, head) => dispatch(req, null, socket, head));
+	httpsServer.on(log.ansi('Upgrade', log.ansi.green), (req, socket, head) => dispatch(req, null, socket, head));
 	httpsServer.listen(httpsPort);
 }
 

@@ -105,7 +105,6 @@ module.exports.dispatch = (req, res, socket, head) => {
 				if(plugins[match][action]) {
 					const pluginPath = match.replace(pluginRoot, "");
 					const query = Array.from(parsedUrl.searchParams.keys()).reduce((a, k) => { return Object.assign({ [k]: parsedUrl.searchParams.get(k) }, a); }, {});
-					log.info(log.tags('Routing'), `dispatching request for ${action} on ${plugin} with ${leftoverPath} ${JSON.stringify(query)}`);
 					plugins[match][action](req, res, query, pluginPath, leftoverPath);
 					return;
 				}

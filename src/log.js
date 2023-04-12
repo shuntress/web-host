@@ -25,12 +25,28 @@ module.exports = (...args) => {
 	}
 }
 
-module.exports.info = (...args) => module.exports("[Info]", ...args);
-module.exports.error = (...args) => module.exports("[Error]", ...args);
-module.exports.warning = (...args) => module.exports("[Warning]", ...args);
+module.exports.ansi = (text, ...params) => `\u001b[${params.join(";")}m${text}\u001b[0m`;
+module.exports.ansi.bold = "1";
+module.exports.ansi.faint = "2";
+module.exports.ansi.conceal = "8";
+module.exports.ansi.blink = "5";
+module.exports.ansi.green = "32";
+module.exports.ansi.blue = "34";
+module.exports.ansi.yellow = "33";
+module.exports.ansi.red = "31";
+module.exports.ansi.magenta = "35";
+module.exports.ansi.cyan = "36";
 
-module.exports.tags = (...tags) => `${tags.map(tag => `(${tag})`).join(' ')}`;
+module.exports.info = (...args) => module.exports(`[${module.exports.ansi("Info", module.exports.ansi.yellow, module.exports.ansi.bold)}]`, ...args);
+module.exports.warning = (...args) => module.exports(`[${module.exports.ansi("Warning", module.exports.ansi.red, module.exports.ansi.bold)}]`, ...args);
+module.exports.error = (...args) => module.exports(`[${module.exports.ansi("Error", module.exports.ansi.red, module.exports.ansi.bold, module.exports.ansi.blink)}]`, ...args);
+
+module.exports.tags = (...tags) => `${tags.map(tag => `(${module.exports.ansi(tag, module.exports.ansi.blue, module.exports.ansi.bold)})`).join(' ')}`;
 module.exports.tag = module.exports.tags;
+
+module.exports.info(`${module.exports.tag(module.exports.ansi("TEST", module.exports.ansi.blink, module.exports.ansi.magenta))} Test Info`);
+module.exports.warning(`${module.exports.tag(module.exports.ansi("TEST", module.exports.ansi.blink, module.exports.ansi.magenta))} Test Warning`);
+module.exports.error(`${module.exports.tag(module.exports.ansi("TEST", module.exports.ansi.blink, module.exports.ansi.magenta))} Test Error`);
 
 const config = require(path.join(__dirname, 'config.js'));
 
@@ -116,23 +132,29 @@ module.exports.sendStatusPage = (_req, res) => {
 			tagClose = message.indexOf(')');
 		}
 
-		if (tags.includes('Request')) {
-			let date = new Date(timestamp);
-			let data = JSON.parse(message);
+		if (tags.some(tag => tag.includes('Request'))) {
+			let dataOpen = message.indexOf('{');
+			let dataClose = message.lastIndexOf('}');
+			if (!(dataOpen < dataClose)) {
+				module.exports.warning("Unexpected missing data in log record", message);
+			} else {
+				let date = new Date(timestamp);
+				let data = JSON.parse(message.substring(dataOpen, dataClose + 1));
 
-			// Pull out flat data for arbitrary later processing.
-			flatData.push(data);
+				// Pull out flat data for arbitrary later processing.
+				flatData.push(data);
 
-			let hour = hours[date.getHours()];
-			if (!hours[date.getHours()].pages[data.for]) hours[date.getHours()].pages[data.for] = 0;
-			hours[date.getHours()].pages[data.for]++
-			hours[date.getHours()].total++;
+				let hour = hours[date.getHours()];
+				if (!hours[date.getHours()].pages[data.for]) hours[date.getHours()].pages[data.for] = 0;
+				hours[date.getHours()].pages[data.for]++
+				hours[date.getHours()].total++;
 
-			if (!hour.users[data.user]) hour.users[data.user] = 0;
-			hour.users[data.user]++;
+				if (!hour.users[data.user]) hour.users[data.user] = 0;
+				hour.users[data.user]++;
 
-			if (!hour.ips[data.from]) hour.ips[data.from] = 0;
-			hour.ips[data.from]++;
+				if (!hour.ips[data.from]) hour.ips[data.from] = 0;
+				hour.ips[data.from]++;
+			}
 		}
 	}).on('close', () => {
 		const bottomChar = '&#x2500', wallChar = '&#x2551', barChar = '&#x2588', markerChar = '&#x2506';
