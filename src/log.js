@@ -25,7 +25,7 @@ module.exports = (...args) => {
 	}
 }
 
-module.exports.ansi = (text, ...params) => `\u001b[${params.join(";")}m${text}\u001b[0m`;
+module.exports.ansi = (text, ...params) => text ? `\u001b[${params.join(";")}m${text}\u001b[0m` : "";
 module.exports.ansi.bold = "1";
 module.exports.ansi.faint = "2";
 module.exports.ansi.conceal = "8";
@@ -41,7 +41,7 @@ module.exports.info = (...args) => module.exports(`[${module.exports.ansi("Info"
 module.exports.warning = (...args) => module.exports(`[${module.exports.ansi("Warning", module.exports.ansi.red, module.exports.ansi.bold)}]`, ...args);
 module.exports.error = (...args) => module.exports(`[${module.exports.ansi("Error", module.exports.ansi.red, module.exports.ansi.bold, module.exports.ansi.blink)}]`, ...args);
 
-module.exports.tags = (...tags) => `${tags.map(tag => `(${module.exports.ansi(tag, module.exports.ansi.blue, module.exports.ansi.bold)})`).join(' ')}`;
+module.exports.tags = (...tags) => `${tags.filter(tag => tag).map(tag => `(${module.exports.ansi(tag, module.exports.ansi.blue, module.exports.ansi.bold)})`).join(' ')}`;
 module.exports.tag = module.exports.tags;
 
 module.exports.info(`${module.exports.tag(module.exports.ansi("TEST", module.exports.ansi.blink, module.exports.ansi.magenta))} Test Info`);
