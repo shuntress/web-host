@@ -312,6 +312,10 @@ module.exports.sendStatusPage = (_req, res) => {
 				font-family: DejaVuSansMonoBook;
 			}
 
+			html {
+				margin-left: calc(100vw - 100%);
+			}
+
 			body {
 				display: flex;
 				flex-direction: column;
