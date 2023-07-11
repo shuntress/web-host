@@ -67,6 +67,11 @@ module.exports.dispatch = (req, res, socket, head) => {
 			res.writeHead(302, {location: "/map.html"});
 			res.end();
 			return;
+		case 'wedding':
+		case 'Wedding':
+			res.writeHead(302, {location: "https://withjoy.com/johanna-and-sam/welcome"});
+			res.end();
+			return;
 	}
 
 	if (parts.length > 1) {

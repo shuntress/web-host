@@ -139,10 +139,19 @@ module.exports.sendStatusPage = (_req, res) => {
 				module.exports.warning("Unexpected missing data in log record", message);
 			} else {
 				let date = new Date(timestamp);
-				let data = JSON.parse(message.substring(dataOpen, dataClose + 1));
+				let data = "";
+				try {
+					data = JSON.parse(message.substring(dataOpen, dataClose + 1));
 
-				// Pull out flat data for arbitrary later processing.
-				flatData.push(data);
+
+					// TODO: The status parsing is expecting a request to have one instance of '{ ... }' but clients may have sent un-escaped strings on the URL. 
+					//         This may cause missing log entries. Fix.
+					// Pull out flat data for arbitrary later processing.
+					flatData.push(data);
+				}
+				catch(e) {
+					module.exports.warning("Corrupt query data");
+				}
 
 				let hour = hours[date.getHours()];
 				if (!hours[date.getHours()].pages[data.for]) hours[date.getHours()].pages[data.for] = 0;

@@ -105,3 +105,10 @@ How this is actually accomplished will vary slightly depending on your specific 
 Config defaults are in [src/config.js](https://github.com/shuntress/web-host/blob/main/src/config.js).
 
 Defaults may be overridden by setting the corresponding property in `administration/config.json`
+
+## Custom Controllers
+Simple "Plugin" architecture enables drop-in custom code on the server-side. Just add a folder in the "Plugins" directory that includes a file called "plugin.js".
+
+Any non-excluded export of that file will be executed when the route matches `/${folder name}/${method name}`.
+
+Framework level information and configuration is passed in by the router when the system starts if you implent an "init" method.

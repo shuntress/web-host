@@ -51,7 +51,7 @@ function loadFile(req, res, stats, absoluteSystemPath) {
 	let rangeEnd = Math.max(0, stats.size - 1);
 
 	// "Resume Download" partial file
-	let isPartialRequest = (mimeType == 'audio/mpeg' || mimeType == 'audio/flac' || mimeType == 'audio/wav') && req.headers.range && req.headers.range.includes('=') && req.headers.range.includes('-');
+	let isPartialRequest = (mimeType == 'video/mp4' || mimeType == 'audio/mpeg' || mimeType == 'audio/flac' || mimeType == 'audio/wav') && req.headers.range && req.headers.range.includes('=') && req.headers.range.includes('-');
 	if (isPartialRequest) {
 		let rangeString = req.headers.range.split('=')[1].split('-');
 		rangeStart = rangeString[0];
@@ -120,19 +120,14 @@ function loadDirectory(req, res, stats, webPath, absoluteSystemPath) {
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<link rel="stylesheet" href="/style.css">
 		<link rel="stylesheet" href="/layout.css">
-		<link rel="stylesheet" href="/index-gallery.css">
 		<title>Index of ${webPath.split(path.sep).join('/')}</title>
 	</head>
 	<body>
 		<div class="content">
 			<h2>${path.basename(webPath)}</h2>
 			${ images.length > 0 ?
-`			<div id="gallery" onmousedown="handleClick(event)" ontouchstart="handleTouchStart(event);" ontouchend="handleTouchEnd(event);" class="gallery spinner">
-				<img id="image-a" onload="handleLoadEnd(event);" class="visible" src="${path.join(webPath, encodeURIComponent(images[0]))}"></img>
-				${images.length > 1 ?
-`				<img id="image-b" onload="handleLoadEnd(event);" class="hidden next" src="${path.join(webPath, encodeURIComponent(images[1]))}"></img>
-` : ""}
-			</div>
+`			
+				<img id="index-header" src="${path.join(webPath, encodeURIComponent(images[0]))}" />
 ` : ""}
 			<ul>
 				${parentWebPath ? `<li class="index-link-folder" onclick="location.href = '${parentWebPath}';"><a href="${parentWebPath}">⤴</a></li>`:''}
@@ -140,7 +135,6 @@ function loadDirectory(req, res, stats, webPath, absoluteSystemPath) {
 			</ul>
 			<address>Modified: ${stats.atime.toLocaleDateString("en-US", {month: "short", day: "2-digit", year: "numeric"})}</address>
 		</div>
-		<script src="/index-gallery.js"></script>
 	</body>
 </html>`;
 		res.writeHead(200, {"Content-Type": "text/html; charset=utf-8", "Content-Length": output.length});
@@ -152,7 +146,7 @@ function getFileLinkTemplate(file, webPath) {
 	const url = path.join(webPath, encodeURIComponent(file));
 	const listItemClickTemplate = `onclick="location.href = '${url}';"`;
 	if (path.extname(file) == ".jpg" || path.extname(file) == ".JPG") {
-		return `<li class="index-link-image" ${listItemClickTemplate}><span onClick="selectImage('${file}');">${file}</span> <a href="${url}" target="_blank">(open in new tab)</a></li>`
+		return `<li class="index-link-image" ${listItemClickTemplate}><a href="${url}" target="_blank">${file}</a></li>`
 	} else if (path.extname(file) == "") {
 		return `<li class="index-link-folder" ${listItemClickTemplate}><a href="${url}">${file}</a></li>`;
 
