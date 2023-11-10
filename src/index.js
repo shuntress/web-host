@@ -184,6 +184,7 @@ const mimeMap = {
 	".svg": "image/svg+xml",
 	".md": "text/markdown",
 	".markdown": "text/markdown",
-	".js": "text/javascript"
+	".js": "text/javascript",
+	".mjs": "text/javascript"
 };
 

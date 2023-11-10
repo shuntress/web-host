@@ -26,7 +26,7 @@ const config = require(path.join(__dirname, 'config.js'));
 const tests = require(path.join(__dirname, 'tests.js'));
 
 tests();
-if (!tests.result) {
+if (tests.fail) {
 	log.error("Test Failure.")
 	process.exit(1);
 }

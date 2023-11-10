@@ -44,10 +44,6 @@ module.exports.error = (...args) => module.exports(`[${module.exports.ansi("Erro
 module.exports.tags = (...tags) => `${tags.filter(tag => tag).map(tag => `(${module.exports.ansi(tag, module.exports.ansi.blue, module.exports.ansi.bold)})`).join(' ')}`;
 module.exports.tag = module.exports.tags;
 
-module.exports.info(`${module.exports.tag(module.exports.ansi("TEST", module.exports.ansi.blink, module.exports.ansi.magenta))} Test Info`);
-module.exports.warning(`${module.exports.tag(module.exports.ansi("TEST", module.exports.ansi.blink, module.exports.ansi.magenta))} Test Warning`);
-module.exports.error(`${module.exports.tag(module.exports.ansi("TEST", module.exports.ansi.blink, module.exports.ansi.magenta))} Test Error`);
-
 const config = require(path.join(__dirname, 'config.js'));
 
 const dailyLogFile = config.dailyLogFile;
