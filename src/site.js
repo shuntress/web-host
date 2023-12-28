@@ -23,6 +23,13 @@ const auth = require(path.join(__dirname, 'auth.js'));
 const log = require(path.join(__dirname, 'log.js'));
 const dispatch = require(path.join(__dirname, 'route.js')).dispatch;
 const config = require(path.join(__dirname, 'config.js'));
+const tests = require(path.join(__dirname, 'tests.js'));
+
+tests();
+if (tests.fail) {
+	log.error("Test Failure.")
+	process.exit(1);
+}
 
 /**
  * Basic http endpoint.
