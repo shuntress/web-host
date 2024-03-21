@@ -137,7 +137,7 @@ function loadDirectory(req, res, stats, webPath, absoluteSystemPath) {
 		</div>
 	</body>
 </html>`;
-		res.writeHead(200, {"Content-Type": "text/html; charset=utf-8", "Content-Length": output.length});
+		res.writeHead(200, {"Content-Type": "text/html;charset=utf-8", "Content-Length": (new TextEncoder().encode(output)).length});
 		return res.end(output);
 	});
 }
