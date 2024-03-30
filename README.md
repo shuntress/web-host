@@ -5,23 +5,20 @@ A web server that uses [Node](https://nodejs.org/)'s built-ins to handle:
  - secure authentication ([HTTP Basic](https://tools.ietf.org/html/rfc7617), [TLS](https://tools.ietf.org/html/rfc8446), [pbkdf2](https://tools.ietf.org/html/rfc8018))
  - simple authorization (No groups, roles, or regex matches)
 
-## What is this?
-It's my take on a practical minimalist web host with code that
-can be understood in an hour and run directly from
-source with no dependencies ([one dependency](https://nodejs.org)).
+---
 
-To that end, you may notice that there are no package, grunt, trevor, cargo,
+Small-scale self-publishing for the web should be simple.
+A CS degree should not feel necessary to share your resume, blog, recipes, or photos.
+
+You may have noticed that there are no package, grunt, trevor, cargo,
 slurp, scarf, jarvis, babel, lint, or docker files. The .git folder is the only dev
 tool sub-directory.
 
-The setup script targets [systemd](https://systemd.io/) to install this software as a persistent service but the project is otherwise system-agnostic.
+This is my take on a practical minimalist web server with code that
+can be understood in an hour and run directly from
+source with no dependencies ([one dependency](https://nodejs.org)).
 
-## Why?
-Small-scale web publishing should be simple.
-
-A CS degree should not feel necessary for self-hosting your resume, blog, recipes, or photos.
-
-# Quick Start
+## Quick Start
 **Install Node**: [https://nodejs.org/](https://nodejs.org/)
 
 **Download and extract the source code**: [https://github.com/shuntress/web-host/archive/main.zip](https://github.com/shuntress/web-host/archive/main.zip)  
@@ -37,7 +34,8 @@ A CS degree should not feel necessary for self-hosting your resume, blog, recipe
 **Add some test content**: `echo "test file, please ignore" > content/testfile.txt`  
 [http://localhost/testfile.txt](http://localhost/testfile.txt)
 
----
+There is a setup script that targets [systemd](https://systemd.io/) to install this software as a persistent service but the project is otherwise system-agnostic.
+Installation as a service has the practical benefit of automatic start as well as logging.
 
 ## Slightly Slower Start
 
@@ -74,13 +72,13 @@ This builds on the quick start by adding a certificate to enable HTTPS and user 
 
 **Check the status page**: [https://localhost/status](https://localhost/private/status)
 
-## Authorization
+### Authorization
 When HTTPS is enabled, resources may be setup to require authorization.
 
-### Blanket privacy
+#### Blanket privacy
 Any URL with `private` in the path will require the user to log in.
 
-### Resource-specific privacy
+#### Resource-specific privacy
 Authorization may be further specified per-directory by adding a newline-separated list of user names in a file called `.authorized_users`.
 
 When any static resource is requested, the index module will recurse up the tree towards the root looking for an `.authorized_users` file.  
@@ -90,7 +88,7 @@ If the first `.authorized_users` does not list the user's name, the request will
 
 If a list of authorized users exists for a resource that does not have `private` in the path, the user will be prompted to login because a name is required for authorization.
 
-## Firewall Settings
+### Firewall Settings
 Network configuration can easily get overcomplicated.
 
 The extremely simplified and generally "good enough" version is that your house has an internet address similar to its street address and your modem/router is like the mailbox to receive messages at your address.
@@ -101,12 +99,12 @@ Specifically, you want inbound and outbound TCP traffic on ports 80 and 443 to g
 
 How this is actually accomplished will vary slightly depending on your specific hardware but most commonly this will be done by connecting to [http://192.168.1.1](http://192/168.1.1) and logging in using the credentials printed on a sticker stuck to the side of your ISP-provided router/modem.
 
-## Configuration Options
+### Configuration Options
 Config defaults are in [src/config.js](https://github.com/shuntress/web-host/blob/main/src/config.js).
 
 Defaults may be overridden by setting the corresponding property in `administration/config.json`
 
-## Custom Controllers
+### Custom Controllers
 Simple "Plugin" architecture enables drop-in custom code on the server-side. Just add a folder in the "Plugins" directory that includes a file called "plugin.js".
 
 Any non-excluded export of that file will be executed when the route matches `/${folder name}/${method name}`.
